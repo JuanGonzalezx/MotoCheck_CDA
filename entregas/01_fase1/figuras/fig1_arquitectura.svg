@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <rect width="1400" height="760" fill="#fff"/>
+  <text x="700" y="40" text-anchor="middle" font-size="28" font-weight="bold" fill="#1f2a44">Arquitectura de MotoCheck Lab</text>
+
+  <!-- Sensores -->
+  <rect x="30" y="80" width="330" height="440" rx="14" fill="#e8f1fb" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="195" y="115" text-anchor="middle" font-size="22" font-weight="bold" fill="#2b6cb0">ENTRADAS (sensores)</text>
+  <g font-size="18" fill="#1a202c">
+    <rect x="50" y="135" width="290" height="52" rx="8" fill="#fff" stroke="#2b6cb0"/><text x="65" y="167">XT-101  Fotocelda LDR (faro)</text>
+    <rect x="50" y="197" width="290" height="52" rx="8" fill="#fff" stroke="#2b6cb0"/><text x="65" y="229">TT-201  DS18B20 (temperatura)</text>
+    <rect x="50" y="259" width="290" height="52" rx="8" fill="#fff" stroke="#2b6cb0"/><text x="65" y="291">AT-301  MQ-2 (gases)</text>
+    <rect x="50" y="321" width="290" height="52" rx="8" fill="#fff" stroke="#2b6cb0"/><text x="65" y="353">ST-401  Hall A3144 (RPM)</text>
+    <rect x="50" y="383" width="290" height="52" rx="8" fill="#fff" stroke="#2b6cb0"/><text x="65" y="415">ZS-101…401  IR FC-51 ×4</text>
+    <text x="65" y="470" font-size="15" fill="#4a5568">Analógicas: ADC1 (GPIO36, 39)</text>
+    <text x="65" y="492" font-size="15" fill="#4a5568">Digitales: IR, Hall (interrupción), OneWire</text>
+  </g>
+
+  <!-- Controlador -->
+  <rect x="470" y="170" width="300" height="260" rx="14" fill="#fff7e6" stroke="#c05621" stroke-width="3"/>
+  <text x="620" y="210" text-anchor="middle" font-size="22" font-weight="bold" fill="#c05621">UC-001  ESP32</text>
+  <g font-size="17" fill="#1a202c" text-anchor="middle">
+    <text x="620" y="245">Máquina de estados</text>
+    <text x="620" y="272">4 estaciones secuenciales</text>
+    <text x="620" y="299">Promedios y umbrales</text>
+    <text x="620" y="326">Control ON-OFF con tiempos</text>
+    <text x="620" y="353">máximos y retiro seguro</text>
+    <text x="620" y="392" font-size="15" fill="#4a5568">Firmware C++ (Arduino core)</text>
+  </g>
+
+  <!-- Actuadores -->
+  <rect x="880" y="80" width="490" height="440" rx="14" fill="#eaf7ee" stroke="#2f855a" stroke-width="2"/>
+  <text x="1125" y="115" text-anchor="middle" font-size="22" font-weight="bold" fill="#2f855a">SALIDAS (actuadores)</text>
+  <g font-size="18" fill="#1a202c">
+    <rect x="900" y="135" width="450" height="52" rx="8" fill="#fff" stroke="#2f855a"/><text x="915" y="167">SY-001 + M-001  Driver L298N + motor de banda</text>
+    <rect x="900" y="197" width="450" height="52" rx="8" fill="#fff" stroke="#2f855a"/><text x="915" y="229">SY-401 + M-401  Motor del rodillo de la rueda</text>
+    <rect x="900" y="259" width="450" height="52" rx="8" fill="#fff" stroke="#2f855a"/><text x="915" y="291">ZY-101…401  Servos SG90 ×4 (brazos)</text>
+    <rect x="900" y="321" width="450" height="52" rx="8" fill="#fff" stroke="#2f855a"/><text x="915" y="353">XL-101…401  LEDs verde/rojo ×4 estaciones</text>
+    <rect x="900" y="383" width="450" height="52" rx="8" fill="#fff" stroke="#2f855a"/><text x="915" y="415">XA-001  Buzzer (resultado global)</text>
+    <text x="915" y="470" font-size="15" fill="#4a5568">PWM: motores (GPIO25, 26), servos 50 Hz</text>
+    <text x="915" y="492" font-size="15" fill="#4a5568">Alimentación: 9 V → L298N; LM2596 → 5 V servos</text>
+  </g>
+
+  <line x1="362" y1="300" x2="466" y2="300" stroke="#333" stroke-width="3" marker-end="url(#a)"/>
+  <line x1="772" y1="300" x2="876" y2="300" stroke="#333" stroke-width="3" marker-end="url(#a)"/>
+
+  <!-- Nube -->
+  <line x1="620" y1="432" x2="620" y2="590" stroke="#333" stroke-width="3" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text x="605" y="500" text-anchor="end" font-size="16" fill="#1a202c">USB serial 115200</text>
+  <text x="605" y="524" text-anchor="end" font-size="16" fill="#1a202c">comandos ⇅ eventos JSON</text>
+
+  <rect x="470" y="594" width="300" height="130" rx="14" fill="#f3f0ff" stroke="#6b46c1" stroke-width="2"/>
+  <text x="620" y="630" text-anchor="middle" font-size="20" font-weight="bold" fill="#6b46c1">PC: puente Node.js</text>
+  <text x="620" y="660" text-anchor="middle" font-size="16">serialport · Express</text>
+  <text x="620" y="684" text-anchor="middle" font-size="16">Socket.IO (tiempo real)</text>
+
+  <rect x="880" y="594" width="200" height="130" rx="14" fill="#e6fffa" stroke="#2c7a7b" stroke-width="2"/>
+  <text x="980" y="630" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c7a7b">MongoDB Atlas</text>
+  <text x="980" y="660" text-anchor="middle" font-size="16">inspecciones</text>
+  <text x="980" y="684" text-anchor="middle" font-size="16">configuración · eventos</text>
+
+  <rect x="1140" y="594" width="230" height="130" rx="14" fill="#fff5f7" stroke="#b83280" stroke-width="2"/>
+  <text x="1255" y="630" text-anchor="middle" font-size="20" font-weight="bold" fill="#b83280">Panel web</text>
+  <text x="1255" y="660" text-anchor="middle" font-size="16">supervisión tipo SCADA</text>
+  <text x="1255" y="684" text-anchor="middle" font-size="16">historial · reporte</text>
+
+  <line x1="772" y1="659" x2="876" y2="659" stroke="#333" stroke-width="3" marker-end="url(#a)"/>
+  <line x1="1084" y1="659" x2="1136" y2="659" stroke="#333" stroke-width="3" marker-start="url(#a)" marker-end="url(#a)"/>
+  <path d="M1255,594 C1255,560 780,560 700,594" fill="none" stroke="#6b46c1" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#a)"/>
+  <text x="985" y="552" text-anchor="middle" font-size="15" fill="#6b46c1">órdenes del operador (placa, iniciar, umbrales)</text>
+  <text x="80" y="640" font-size="17" fill="#1a202c" font-weight="bold">Capas</text>
+  <text x="80" y="668" font-size="16" fill="#4a5568">1. Campo: sensores y actuadores</text>
+  <text x="80" y="692" font-size="16" fill="#4a5568">2. Control: ESP32</text>
+  <text x="80" y="716" font-size="16" fill="#4a5568">3. Supervisión y nube: PC, Atlas, web</text>
+</svg>

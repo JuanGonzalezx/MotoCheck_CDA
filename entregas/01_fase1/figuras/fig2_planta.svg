@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="690" viewBox="0 0 1400 690" font-family="Arial, Helvetica, sans-serif">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker></defs>
+  <rect width="1400" height="690" fill="#fff"/>
+  <text x="700" y="38" text-anchor="middle" font-size="26" font-weight="bold" fill="#1f2a44">Plano de la línea (vista superior) con nomenclatura ISA-5.1</text>
+  <!-- base -->
+  <rect x="60" y="230" width="1280" height="150" rx="10" fill="#f7f2e8" stroke="#8b6f47" stroke-width="2"/>
+  <!-- banda -->
+  <rect x="110" y="265" width="1180" height="80" fill="#3a3a3a"/>
+  <g stroke="#666" stroke-width="2">
+    <line x1="160" y1="270" x2="160" y2="340"/><line x1="260" y1="270" x2="260" y2="340"/><line x1="360" y1="270" x2="360" y2="340"/><line x1="460" y1="270" x2="460" y2="340"/><line x1="560" y1="270" x2="560" y2="340"/><line x1="660" y1="270" x2="660" y2="340"/><line x1="760" y1="270" x2="760" y2="340"/><line x1="860" y1="270" x2="860" y2="340"/><line x1="960" y1="270" x2="960" y2="340"/><line x1="1060" y1="270" x2="1060" y2="340"/><line x1="1160" y1="270" x2="1160" y2="340"/><line x1="1260" y1="270" x2="1260" y2="340"/>
+  </g>
+  <rect x="80" y="255" width="40" height="100" rx="8" fill="#9aa5b1" stroke="#333"/>
+  <rect x="1280" y="255" width="40" height="100" rx="8" fill="#9aa5b1" stroke="#333"/>
+  <text x="100" y="400" text-anchor="middle" font-size="14">Rodillo tensor</text>
+  <text x="1300" y="400" text-anchor="middle" font-size="14">Rodillo motriz</text>
+  <circle cx="1300" cy="450" r="26" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1300" y="456" text-anchor="middle" font-size="16" font-weight="bold">M-001</text>
+  <circle cx="1210" cy="450" r="30" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1210" y="447" text-anchor="middle" font-size="14" font-weight="bold">SY</text><text x="1210" y="465" text-anchor="middle" font-size="13">001</text>
+  <line x1="1240" y1="450" x2="1272" y2="450" stroke="#2f855a" stroke-width="2"/>
+  <line x1="200" y1="305" x2="1240" y2="305" stroke="#fff" stroke-width="3" stroke-dasharray="14 10" marker-end="url(#a)"/>
+  <text x="700" y="296" text-anchor="middle" font-size="15" fill="#fff">sentido de avance</text>
+  <!-- moto -->
+  <rect x="150" y="288" width="70" height="34" rx="10" fill="#e53e3e"/><text x="185" y="310" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">MOTO</text>
+  <!-- estaciones -->
+  <g font-size="14" text-anchor="middle">
+    <!-- E1 -->
+    <line x1="340" y1="230" x2="340" y2="380" stroke="#2b6cb0" stroke-width="2" stroke-dasharray="5 5"/>
+    <text x="340" y="80" font-size="18" font-weight="bold" fill="#2b6cb0">E1 · Faro</text>
+    <circle cx="300" cy="140" r="30" fill="#fff" stroke="#2b6cb0" stroke-width="2.5"/><text x="300" y="137" font-weight="bold">XT</text><text x="300" y="155">101</text>
+    <circle cx="380" cy="140" r="30" fill="#fff" stroke="#2b6cb0" stroke-width="2.5"/><text x="380" y="137" font-weight="bold">ZY</text><text x="380" y="155">101</text>
+    <circle cx="340" cy="480" r="30" fill="#fff" stroke="#2b6cb0" stroke-width="2.5"/><text x="340" y="477" font-weight="bold">ZS</text><text x="340" y="495">101</text>
+    <circle cx="340" cy="560" r="26" fill="#fff" stroke="#2b6cb0" stroke-width="2.5"/><text x="340" y="557" font-weight="bold">XL</text><text x="340" y="574">101</text>
+    <line x1="300" y1="170" x2="320" y2="262" stroke="#2b6cb0" stroke-width="2"/>
+    <!-- E2 -->
+    <line x1="620" y1="230" x2="620" y2="380" stroke="#c05621" stroke-width="2" stroke-dasharray="5 5"/>
+    <text x="620" y="80" font-size="18" font-weight="bold" fill="#c05621">E2 · Temperatura</text>
+    <circle cx="580" cy="140" r="30" fill="#fff" stroke="#c05621" stroke-width="2.5"/><text x="580" y="137" font-weight="bold">TT</text><text x="580" y="155">201</text>
+    <circle cx="660" cy="140" r="30" fill="#fff" stroke="#c05621" stroke-width="2.5"/><text x="660" y="137" font-weight="bold">ZY</text><text x="660" y="155">201</text>
+    <circle cx="620" cy="480" r="30" fill="#fff" stroke="#c05621" stroke-width="2.5"/><text x="620" y="477" font-weight="bold">ZS</text><text x="620" y="495">201</text>
+    <circle cx="620" cy="560" r="26" fill="#fff" stroke="#c05621" stroke-width="2.5"/><text x="620" y="557" font-weight="bold">XL</text><text x="620" y="574">201</text>
+    <line x1="580" y1="170" x2="600" y2="262" stroke="#c05621" stroke-width="2"/>
+    <!-- E3 -->
+    <line x1="900" y1="230" x2="900" y2="380" stroke="#6b46c1" stroke-width="2" stroke-dasharray="5 5"/>
+    <text x="900" y="80" font-size="18" font-weight="bold" fill="#6b46c1">E3 · Gases</text>
+    <circle cx="860" cy="140" r="30" fill="#fff" stroke="#6b46c1" stroke-width="2.5"/><text x="860" y="137" font-weight="bold">AT</text><text x="860" y="155">301</text>
+    <circle cx="940" cy="140" r="30" fill="#fff" stroke="#6b46c1" stroke-width="2.5"/><text x="940" y="137" font-weight="bold">ZY</text><text x="940" y="155">301</text>
+    <circle cx="900" cy="480" r="30" fill="#fff" stroke="#6b46c1" stroke-width="2.5"/><text x="900" y="477" font-weight="bold">ZS</text><text x="900" y="495">301</text>
+    <circle cx="900" cy="560" r="26" fill="#fff" stroke="#6b46c1" stroke-width="2.5"/><text x="900" y="557" font-weight="bold">XL</text><text x="900" y="574">301</text>
+    <line x1="860" y1="170" x2="880" y2="262" stroke="#6b46c1" stroke-width="2"/>
+    <!-- E4 -->
+    <line x1="1130" y1="230" x2="1130" y2="380" stroke="#2f855a" stroke-width="2" stroke-dasharray="5 5"/>
+    <text x="1130" y="80" font-size="18" font-weight="bold" fill="#2f855a">E4 · Rueda</text>
+    <circle cx="1050" cy="140" r="30" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1050" y="137" font-weight="bold">ST</text><text x="1050" y="155">401</text>
+    <circle cx="1130" cy="140" r="30" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1130" y="137" font-weight="bold">ZY</text><text x="1130" y="155">401</text>
+    <circle cx="1210" cy="140" r="30" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1210" y="137" font-weight="bold">M</text><text x="1210" y="155">401</text>
+    <circle cx="1130" cy="480" r="30" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1130" y="477" font-weight="bold">ZS</text><text x="1130" y="495">401</text>
+    <circle cx="1130" cy="560" r="26" fill="#fff" stroke="#2f855a" stroke-width="2.5"/><text x="1130" y="557" font-weight="bold">XL</text><text x="1130" y="574">401</text>
+    <line x1="1130" y1="170" x2="1120" y2="262" stroke="#2f855a" stroke-width="2"/>
+    <line x1="1210" y1="170" x2="1140" y2="262" stroke="#2f855a" stroke-width="2"/>
+  </g>
+  <g stroke="#888" stroke-width="1.5"><line x1="340" y1="380" x2="340" y2="450"/><line x1="620" y1="380" x2="620" y2="450"/><line x1="900" y1="380" x2="900" y2="450"/><line x1="1130" y1="380" x2="1130" y2="450"/></g>
+  <g font-size="14" fill="#1a202c">
+    <text x="60" y="640">XT: luminosidad (sin clasificar) · TT: temperatura · AT: análisis de gases · ST: velocidad · ZS: interruptor de posición (IR)</text>
+    <text x="60" y="664">ZY: posicionador (servo) · SY: convertidor de velocidad (driver) · M: motor · XL: luz piloto (LED) · UC-001: controlador ESP32 · XA-001: alarma (buzzer)</text>
+  </g>
+</svg>
