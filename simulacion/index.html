@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#414141">
+  <meta name="description" content="Prototipo interactivo de una línea de inspección de motocicletas con banda transportadora, sensores y semáforos.">
+  <title>MOTO-CHECK — Maqueta interactiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--ui-graphite:#414141;--ui-amber:#f7c974;--ui-cream:#faeccf;--ui-paper:#f8f8f8;--font-ui:"Urbanist",sans-serif;--radius-full:9999px;--goo-viscosity:7;--pass:#22c55e;--fail:#ef4444}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--ui-paper);color:var(--ui-graphite);font-family:var(--font-ui);font-weight:500}
+    button,input{font:inherit}button{cursor:pointer}
+    button:focus-visible,input:focus-visible{outline:3px solid var(--ui-amber);outline-offset:3px}
+    .shell{max-width:1500px;margin:auto;padding:22px clamp(16px,4vw,54px) 70px}
+    .topbar{background:var(--ui-graphite);color:var(--ui-paper);border-radius:var(--radius-full);padding:12px 16px 12px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px;white-space:nowrap;font-weight:900;font-size:18px;letter-spacing:.025em}
+    .brand-icon{display:grid;place-items:center;background:var(--ui-amber);color:var(--ui-graphite);width:41px;height:41px;border-radius:50%}
+    .top-meta{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--ui-cream)}
+    .microchip,.chip{border-radius:var(--radius-full);padding:10px 15px;display:inline-flex;align-items:center;gap:8px;background:rgb(248 248 248 / .10);white-space:nowrap}
+    .chip{background:var(--ui-cream);color:var(--ui-graphite)}
+    .small-dot{height:8px;width:8px;background:var(--ui-amber);border-radius:50%;display:inline-block;box-shadow:0 0 0 4px rgb(247 201 116 / .16)}
+    .intro{display:flex;align-items:end;justify-content:space-between;gap:28px;padding:34px 10px 26px}
+    .eyebrow{font-size:12px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+    h1{font-size:clamp(35px,5.2vw,75px);letter-spacing:-.055em;line-height:1.01;margin:0;font-weight:900;max-width:920px}
+    h1 span{color:var(--ui-amber);text-shadow:1px 1px 0 var(--ui-graphite)}
+    .intro p{max-width:565px;font-size:16px;line-height:1.5;margin:15px 0 0;color:rgb(65 65 65 / .72)}
+    .version{font-weight:800;font-size:12px;letter-spacing:.06em;white-space:nowrap;padding:13px 18px;background:var(--ui-cream);border-radius:var(--radius-full)}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 325px;gap:18px}
+    .machine-panel{background:var(--ui-cream);border-radius:var(--radius-full);min-width:0;overflow:hidden;position:relative}
+    .machine-header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:24px 26px 0}
+    .panel-label{font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+    .machine-header h2,.side-panel h2,.section-title{margin:5px 0 0;font-size:23px;font-weight:900;letter-spacing:-.035em}
+    .live-pill{display:inline-flex;align-items:center;gap:8px;background:var(--ui-paper);border-radius:var(--radius-full);padding:10px 14px;font-size:12px;font-weight:800;white-space:nowrap}
+    .status-pulse{width:9px;height:9px;border-radius:50%;background:var(--ui-graphite)}
+    .status-pulse.running{background:var(--pass);box-shadow:0 0 0 4px rgb(34 197 94 / .15)}
+    .scroller{overflow-x:auto;overflow-y:hidden;scrollbar-color:var(--ui-amber) transparent;scrollbar-width:thin;margin:15px 0 0}
+    .factory{min-width:860px;position:relative;height:390px;overflow:hidden}
+    .ceiling{position:absolute;top:15px;left:3%;right:3%;height:10px;background:var(--ui-graphite);border-radius:var(--radius-full);opacity:.15}
+    .ceiling:before,.ceiling:after{content:"";position:absolute;top:0;bottom:0;width:11px;background:var(--ui-graphite);border-radius:var(--radius-full)}
+    .ceiling:before{left:13%}.ceiling:after{right:13%}
+    .station{position:absolute;top:24px;bottom:110px;width:153px;transform:translateX(-50%);pointer-events:none}
+    .station[data-stage="0"]{left:20%}.station[data-stage="1"]{left:43%}.station[data-stage="2"]{left:66%}.station[data-stage="3"]{left:88%}
+    .station-top{display:flex;align-items:center;flex-direction:column;gap:8px;position:relative;z-index:3}
+    .station-index{font-size:11px;font-weight:900;letter-spacing:.14em;opacity:.62}
+    .station-name{font-size:17px;font-weight:900;text-align:center;white-space:nowrap}
+    .signal{display:flex;align-items:center;gap:9px;background:var(--ui-graphite);border-radius:var(--radius-full);padding:8px 12px;color:var(--ui-paper);box-shadow:0 8px 18px rgb(65 65 65 / .12)}
+    .lamp{height:13px;width:13px;border-radius:50%;background:rgb(248 248 248 / .19);border:1px solid rgb(248 248 248 / .18);transition:background .2s,box-shadow .2s}
+    .lamp.red.on{background:var(--fail);box-shadow:0 0 13px rgb(239 68 68 / .76)}
+    .lamp.green.on{background:var(--pass);box-shadow:0 0 13px rgb(34 197 94 / .65)}
+    .signal-label{font-size:10px;letter-spacing:.04em;font-weight:800;min-width:49px}
+    .arch{position:absolute;left:16px;right:16px;top:100px;bottom:0;border:9px solid rgb(65 65 65 / .27);border-bottom:0;border-radius:35px 35px 0 0;opacity:.86}
+    .arch:before{content:"";position:absolute;top:-9px;left:16px;right:16px;height:8px;border-radius:var(--radius-full);background:var(--ui-amber)}
+    .station.active .arch{border-color:var(--ui-graphite);box-shadow:0 0 0 8px rgb(247 201 116 / .20)}
+    .station.active .station-name{text-decoration:underline;text-decoration-color:var(--ui-amber);text-decoration-thickness:5px;text-underline-offset:5px}
+    .sensor-head{position:absolute;top:113px;left:50%;transform:translateX(-50%);height:24px;width:48px;background:var(--ui-graphite);border-radius:var(--radius-full);display:grid;place-items:center;color:var(--ui-amber);font-size:12px;font-weight:900}
+    .sensor-beam{position:absolute;left:50%;top:138px;bottom:0;border-left:2px dashed rgb(65 65 65 / .27);opacity:.65}
+    .station.active .sensor-beam{border-color:var(--ui-graphite);opacity:1}
+    .ground{position:absolute;bottom:29px;left:2%;right:2%;height:16px;border-radius:var(--radius-full);background:rgb(65 65 65 / .20)}
+    .belt-housing{position:absolute;bottom:70px;left:2.5%;right:2.5%;height:62px;border-radius:var(--radius-full);background:var(--ui-graphite);padding:9px 14px;box-shadow:0 15px 0 rgb(65 65 65 / .13)}
+    .belt-track{height:100%;border-radius:var(--radius-full);overflow:hidden;background:rgb(248 248 248 / .15);position:relative}
+    .slats{display:flex;gap:9px;width:max-content;height:100%;align-items:stretch;transform:translateX(-35px)}
+    .slats i{width:24px;margin:5px 0;border-radius:var(--radius-full);background:rgb(247 201 116 / .36);display:block;flex-shrink:0}
+    .factory.running .slats{animation:slats 1.05s linear infinite}
+    @keyframes slats{to{transform:translateX(-68px)}}
+    .roller{position:absolute;bottom:74px;width:54px;height:54px;background:var(--ui-amber);border:9px solid var(--ui-graphite);border-radius:50%;z-index:3;display:grid;place-items:center}
+    .roller:after{content:"";width:13px;height:13px;background:var(--ui-graphite);border-radius:50%}
+    .roller.left{left:2.6%}.roller.right{right:2.6%}
+    .motor-box{position:absolute;bottom:10px;left:4%;background:var(--ui-graphite);color:var(--ui-cream);padding:10px 17px;border-radius:var(--radius-full);font-size:10px;font-weight:900;letter-spacing:.1em}
+    .motor-box:after{content:"";position:absolute;height:28px;width:4px;left:50%;bottom:100%;background:var(--ui-graphite)}
+    .bike-carrier{position:absolute;z-index:5;bottom:129px;left:6%;transform:translateX(-50%);width:172px;height:114px;will-change:left;pointer-events:none}
+    .bike-carrier svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 10px 4px rgb(65 65 65 / .14))}
+    .bike-carrier .wheel{transform-box:fill-box;transform-origin:center}
+    .factory.wheel-test .bike-carrier .wheel:first-of-type{animation:wheel-rotate .75s linear infinite}
+    .factory .wheel-test-roller{position:absolute;left:88%;bottom:175px;z-index:6;transform:translateX(85px);transition:transform .3s ease;color:var(--ui-graphite);font-weight:900;font-size:10px;display:flex;align-items:center;gap:7px;background:var(--ui-amber);border:3px solid var(--ui-graphite);border-radius:var(--radius-full);padding:8px 11px}
+    .factory.wheel-tool-deployed .wheel-test-roller{transform:translateX(-60px)}
+    @keyframes wheel-rotate{to{transform:rotate(360deg)}}
+    .transport-cradle{position:absolute;left:28px;right:20px;bottom:-6px;height:7px;background:var(--ui-amber);border:2px solid var(--ui-graphite);border-radius:var(--radius-full)}
+    .factory-caption{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 26px 20px;font-size:11px;font-weight:800;color:rgb(65 65 65 / .70)}
+    .factory-caption span{display:flex;gap:7px;align-items:center}
+    .machine-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ui-graphite);padding:16px 20px 18px;color:var(--ui-paper)}
+    .button{border:0;border-radius:var(--radius-full);padding:13px 19px;font-size:13px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,background .2s}
+    .button:hover{transform:translateY(-2px)}.button:active{transform:scale(.97)}
+    .button.primary{background:var(--ui-amber);color:var(--ui-graphite)}
+    .button.secondary{background:rgb(248 248 248 / .14);color:var(--ui-paper)}
+    .button:disabled{opacity:.36;cursor:default;transform:none}
+    .speed-control{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:12px;font-weight:800;white-space:nowrap}
+    input[type="range"]{accent-color:var(--ui-amber);width:112px}
+    .side-panel{border-radius:var(--radius-full);background:var(--ui-graphite);color:var(--ui-paper);padding:25px 22px;display:flex;flex-direction:column;min-width:0}
+    .side-panel .panel-label{color:var(--ui-amber)}
+    .side-panel h2{font-size:25px}
+    .side-blurb{font-size:13px;line-height:1.45;color:rgb(248 248 248 / .68);margin:9px 0 20px}
+    .switch-row{padding:15px 0;border-top:1px solid rgb(248 248 248 / .14);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}
+    .switch-row strong{font-size:14px;display:block}.switch-row small{display:block;font-size:12px;margin-top:4px;color:rgb(248 248 248 / .58)}
+    .switch{width:49px;height:27px;position:relative;flex-shrink:0;display:inline-block}
+    .switch input{opacity:0;position:absolute;width:100%;height:100%;margin:0;cursor:pointer;z-index:2}
+    .switch-track{position:absolute;inset:0;background:rgb(248 248 248 / .24);border-radius:var(--radius-full);transition:background .2s}
+    .switch-track:after{content:"";position:absolute;top:4px;left:4px;width:19px;height:19px;background:var(--ui-paper);border-radius:50%;transition:transform .2s}
+    .switch input:checked+.switch-track{background:var(--ui-amber)}
+    .switch input:checked+.switch-track:after{transform:translateX(22px);background:var(--ui-graphite)}
+    .switch input:focus-visible+.switch-track{outline:3px solid var(--ui-amber);outline-offset:3px}
+    .side-note{margin-top:auto;padding-top:22px;font-size:12px;line-height:1.45;color:var(--ui-cream)}
+    .side-note strong{display:block;color:var(--ui-amber);font-size:13px;margin-bottom:5px}
+    .results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-top:18px}
+    .result-card{background:var(--ui-paper);border:1px solid rgb(65 65 65 / .10);border-radius:var(--radius-full);padding:23px 26px;display:flex;align-items:center;gap:14px;min-width:0;transition:transform .2s,background .2s}
+    .result-card.active{background:var(--ui-cream);transform:translateY(-3px)}
+    .result-icon{display:grid;place-items:center;border-radius:50%;width:52px;height:52px;flex-shrink:0;background:var(--ui-cream);font-size:24px}
+    .result-title{font-size:13px;font-weight:800;white-space:nowrap}.result-measure{font-size:27px;font-weight:900;letter-spacing:-.04em;margin:3px 0}
+    .result-status{font-size:11px;font-weight:900;letter-spacing:.065em;text-transform:uppercase;opacity:.62}
+    .result-status.pass{color:var(--pass);opacity:1}.result-status.fail{color:var(--fail);opacity:1}
+    .below{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:28px}
+    .section-title{margin-bottom:16px;font-size:24px}
+    .steps{display:flex;flex-direction:column;gap:10px}
+    .step{width:100%;display:flex;text-align:left;align-items:center;gap:15px;background:var(--ui-cream);border:2px solid transparent;border-radius:var(--radius-full);padding:14px 16px;color:var(--ui-graphite);transition:transform .15s,border .15s}
+    .step:hover{transform:translateX(3px)}.step.selected{border-color:var(--ui-graphite)}
+    .step-num{width:38px;height:38px;background:var(--ui-graphite);color:var(--ui-amber);font-size:13px;font-weight:900;flex-shrink:0;display:grid;place-items:center;border-radius:50%}
+    .step strong{display:block;font-size:14px}.step small{font-size:12px;display:block;margin-top:3px;opacity:.68;line-height:1.25}
+    .step-arrow{margin-left:auto;font-size:19px;font-weight:900}
+    .readout{background:var(--ui-cream);border-radius:var(--radius-full);padding:22px 25px;display:flex;flex-direction:column;gap:10px}
+    .readout-top{display:flex;justify-content:space-between;align-items:center;gap:14px}
+    .readout-badge{background:var(--ui-amber);font-size:10px;font-weight:900;letter-spacing:.06em;border-radius:var(--radius-full);padding:8px 13px}
+    .readout h3{font-size:25px;font-weight:900;line-height:1.12;letter-spacing:-.035em;margin:0}
+    .readout p{font-size:14px;line-height:1.45;margin:0;opacity:.75}
+    .readout-value{font-size:49px;letter-spacing:-.05em;line-height:1;font-weight:900;margin:10px 0 3px}
+    .readout-foot{font-size:12px;font-weight:800;display:flex;justify-content:space-between;gap:10px;opacity:.7}
+    .meter{height:11px;background:rgb(65 65 65 / .15);border-radius:var(--radius-full);overflow:hidden}
+    .meter-fill{width:0;height:100%;background:var(--ui-graphite);border-radius:var(--radius-full);transition:width .35s}
+    .footer-note{margin-top:25px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;line-height:1.4;opacity:.75}
+    .footer-note strong{font-weight:900}
+    .goo-deco{position:absolute;right:-24px;top:-8px;width:160px;height:100px;opacity:.5;pointer-events:none;filter:url(#ui-goo);-webkit-filter:url(#ui-goo)}
+    .goo-deco i{position:absolute;background:var(--ui-amber);border-radius:50%;display:block}.goo-deco i:nth-child(1){height:72px;width:72px;right:0;top:0}.goo-deco i:nth-child(2){height:47px;width:47px;right:64px;top:39px}.goo-deco i:nth-child(3){height:25px;width:25px;right:111px;top:55px}
+    .scroller{display:none}
+    .scene-stage{height:490px;position:relative;overflow:hidden;margin:16px 0 0;background:var(--ui-cream);isolation:isolate}
+    .scene-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline-offset:-5px}
+    .scene-canvas:active{cursor:grabbing}
+    .camera-controls{position:absolute;top:14px;left:19px;display:flex;gap:7px;flex-wrap:wrap;max-width:calc(100% - 34px)}
+    .camera-button{background:rgb(248 248 248 / .92);border:1px solid rgb(65 65 65 / .12);color:var(--ui-graphite);font-size:11px;font-weight:900;padding:10px 13px;border-radius:var(--radius-full)}
+    .camera-button.active{background:var(--ui-graphite);color:var(--ui-amber)}
+    .scene-watermark{position:absolute;right:20px;bottom:13px;font-size:11px;letter-spacing:.1em;font-weight:900;opacity:.58;pointer-events:none}
+    .scene-help{position:absolute;left:18px;bottom:12px;border-radius:var(--radius-full);background:rgb(248 248 248 / .84);padding:9px 14px;font-size:11px;font-weight:800;pointer-events:none}
+    @media(max-width:1100px){.layout{grid-template-columns:1fr}.side-panel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 22px}.side-panel .side-blurb{grid-column:1/-1}.side-panel h2,.side-panel .panel-label{grid-column:1/-1}.side-note{grid-column:1/-1}.results{gap:10px}.result-card{padding:19px}}
+    @media(max-width:720px){.shell{padding:12px 12px 45px}.topbar{padding:9px 12px}.top-meta .microchip{display:none}.intro{padding:27px 4px 23px}.intro .version{display:none}.intro p{font-size:14px}.machine-header{padding:20px 18px 0}.machine-panel{border-radius:var(--radius-full)}.factory-caption{padding:0 18px 16px}.machine-toolbar{padding:13px;gap:8px}.speed-control{width:100%;margin:6px 0 0;justify-content:space-between}.speed-control input{width:40%}.side-panel{display:flex;border-radius:var(--radius-full)}.results{grid-template-columns:1fr}.result-card{padding:13px 18px}.below{grid-template-columns:1fr}.readout{border-radius:var(--radius-full)}.footer-note{flex-direction:column;align-items:start}.scene-stage{height:370px}.camera-controls{left:8px;top:8px}.camera-button{padding:8px 10px;font-size:10px}.scene-help{display:none}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+    /* Los contenedores de composición son planos; las superficies interactivas sí son píldoras. */
+    .machine-panel{background:transparent;border-radius:0;overflow:visible}
+    .machine-header{padding:6px 8px 0}
+    .side-panel{background:transparent;border-radius:0;color:var(--ui-graphite);padding:7px 0 0;gap:5px}
+    .side-panel .panel-label,.side-note strong{color:var(--ui-graphite)}
+    .side-blurb{color:var(--ui-graphite);opacity:.68}
+    .side-panel .switch-row{background:var(--ui-graphite);color:var(--ui-paper);border:0;border-radius:var(--radius-full);padding:15px 20px;margin:0 0 5px}
+    .side-note{background:var(--ui-cream);color:var(--ui-graphite);border-radius:var(--radius-full);padding:23px 25px;margin-top:12px}
+    .readout{background:transparent;border-radius:0;padding:8px 0}
+    .result-card{border-radius:var(--radius-full)}
+    .machine-toolbar{border-radius:var(--radius-full)}
+    .actuator-readout{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ui-cream);color:var(--ui-graphite);border-radius:var(--radius-full);padding:12px 17px;font-size:12px;font-weight:800;margin-top:5px}
+    .actuator-readout b{background:var(--ui-graphite);color:var(--ui-cream);border-radius:var(--radius-full);padding:7px 12px;font-size:10px;letter-spacing:.05em;white-space:nowrap}
+    .actuator-readout b.extended{background:var(--ui-amber);color:var(--ui-graphite)}
+    .camera-button.wire-active{background:var(--ui-amber);color:var(--ui-graphite);border-color:var(--ui-amber)}
+    .wiring-section{margin-top:30px}
+    .wiring-top{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:14px}
+    .wiring-top p{font-size:13px;line-height:1.45;max-width:700px;opacity:.7;margin:5px 0 0}
+    .wiring-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .sensor-card{background:var(--ui-cream);color:var(--ui-graphite);border:2px solid transparent;border-radius:var(--radius-full);padding:20px 18px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;transition:transform .18s,border-color .18s}
+    .sensor-card:hover{transform:translateY(-3px)}
+    .sensor-card.selected{border-color:var(--ui-graphite);background:var(--ui-amber)}
+    .sensor-card strong{font-size:16px;font-weight:900}
+    .sensor-card small{font-size:12px;opacity:.75;line-height:1.4}
+    .pin-chip{background:var(--ui-graphite);color:var(--ui-cream);padding:7px 13px;border-radius:var(--radius-full);font-size:11px;font-weight:900;white-space:nowrap}
+    .wiring-map{margin-top:13px;display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+    .wiring-map>div{padding:22px 27px;background:var(--ui-cream);border-radius:var(--radius-full);font-size:13px;line-height:1.6}
+    .wiring-map strong{font-weight:900}
+    .wiring-map ul{padding-left:18px;margin:8px 0 0}
+    .wire-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-weight:800;margin-top:11px}
+    .wire-legend span{display:flex;align-items:center;gap:5px}
+    .wire-legend i{width:20px;height:5px;display:inline-block;border-radius:var(--radius-full)}
+    @media(max-width:1100px){.results{grid-template-columns:repeat(2,minmax(0,1fr))}.wiring-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:720px){.results{grid-template-columns:1fr}.wiring-grid{grid-template-columns:1fr}.wiring-map{grid-template-columns:1fr}.wiring-map>div{padding:20px}.sensor-card{padding:15px 18px}}
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><filter id="ui-goo" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -10" result="goo"/><feComposite in="SourceGraphic" in2="goo" operator="atop"/></filter></defs></svg>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">✦</span> MOTO-CHECK <span style="font-size:10px;opacity:.56;font-weight:700">/ LAB</span></div>
+      <div class="top-meta"><span class="microchip">PROTOTIPO DIGITAL</span><span class="microchip"><span class="small-dot"></span> SIMULADOR SIN HARDWARE</span></div>
+    </header>
+    <section class="intro">
+      <div><div class="eyebrow">Laboratorio de automatización · Concepto 05</div><h1>Una línea de inspección <span>en movimiento.</span></h1><p>Tres servos posicionan las pruebas de faro, gases y rueda. En la última estación, un rodillo con motor hace girar la rueda trasera de la moto de juguete; el sensor Hall cuenta las vueltas y estima sus RPM y desaceleración.</p></div>
+      <div class="version">DISEÑO A ESCALA · 1:12</div>
+    </section>
+
+    <main>
+      <section class="layout" aria-label="Simulador de banda transportadora">
+        <div class="machine-panel">
+          <div class="goo-deco" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="machine-header"><div><span class="panel-label">Vista 3D · Línea de producción</span><h2>Banco de revisión automatizado</h2></div><span class="live-pill"><span id="statusDot" class="status-pulse"></span><span id="systemStatus">EN ESPERA</span></span></div>
+          <div class="scene-stage">
+            <canvas id="scene3d" class="scene-canvas" tabindex="0" role="img" aria-label="Escena tridimensional de una moto sobre una banda transportadora con cuatro estaciones: luz, temperatura, gases y rodamiento con servo, rodillo motorizado y sensor Hall. Arrastra para girar y pulsa una estación."></canvas>
+            <div class="camera-controls" role="group" aria-label="Vistas de cámara">
+              <button type="button" class="camera-button active" data-view="iso">◈ Isométrica</button>
+              <button type="button" class="camera-button" data-view="side">▤ Lateral</button>
+              <button type="button" class="camera-button" data-view="top">⊞ Superior</button>
+              <button id="wiresBtn" type="button" class="camera-button wire-active" aria-pressed="true">⌁ Cables visibles</button>
+            </div>
+            <div class="scene-help">↔ Arrastra para girar · Rueda para acercar · Pulsa un sensor</div>
+            <div class="scene-watermark">MOTO-CHECK · 3D</div>
+          </div>
+          <div class="scroller" aria-label="Maqueta lateral desplazable">
+            <div id="factory" class="factory">
+              <div class="ceiling"></div>
+              <div class="station" data-stage="0"><div class="station-top"><span class="station-index">ESTACIÓN 01</span><span class="station-name">LUMINOSIDAD</span><div class="signal"><span class="lamp red"></span><span class="lamp green"></span><span class="signal-label">PENDIENTE</span></div></div><div class="arch"></div><div class="sensor-head">☀</div><div class="sensor-beam"></div></div>
+              <div class="station" data-stage="1"><div class="station-top"><span class="station-index">ESTACIÓN 02</span><span class="station-name">TEMPERATURA</span><div class="signal"><span class="lamp red"></span><span class="lamp green"></span><span class="signal-label">PENDIENTE</span></div></div><div class="arch"></div><div class="sensor-head">°C</div><div class="sensor-beam"></div></div>
+              <div class="station" data-stage="2"><div class="station-top"><span class="station-index">ESTACIÓN 03</span><span class="station-name">GASES</span><div class="signal"><span class="lamp red"></span><span class="lamp green"></span><span class="signal-label">PENDIENTE</span></div></div><div class="arch"></div><div class="sensor-head">MQ</div><div class="sensor-beam"></div></div>
+              <div class="station" data-stage="3"><div class="station-top"><span class="station-index">ESTACIÓN 04</span><span class="station-name">RUEDA / HALL</span><div class="signal"><span class="signal-label" id="hallLineStatus">PENDIENTE</span></div></div><div class="arch"></div><div class="sensor-head">RPM</div><div class="sensor-beam"></div></div>
+              <div class="ground"></div>
+              <div class="belt-housing"><div class="belt-track"><div id="slats" class="slats" aria-hidden="true"></div></div></div>
+              <div class="roller left"></div><div class="roller right"></div>
+              <div class="motor-box">MOTOR DC + REDUCTORA</div>
+              <div class="wheel-test-roller">◉ RODILLO + MOTOR</div>
+              <div id="bike" class="bike-carrier" aria-label="Motocicleta a escala">
+                <svg viewBox="0 0 190 125" role="img" aria-label="Motocicleta deportiva a escala vista de lado">
+                  <g class="wheel"><circle cx="40" cy="91" r="30" fill="#414141"/><circle cx="40" cy="91" r="23" fill="#f8f8f8" stroke="#414141" stroke-width="3"/><path d="M40 69V113M18 91H62M24 75L56 107M56 75L24 107" stroke="#414141" stroke-width="2.5"/><circle cx="40" cy="91" r="6" fill="#f7c974" stroke="#414141" stroke-width="2"/></g>
+                  <g class="wheel"><circle cx="145" cy="91" r="30" fill="#414141"/><circle cx="145" cy="91" r="23" fill="#f8f8f8" stroke="#414141" stroke-width="3"/><path d="M145 69V113M123 91H167M129 75L161 107M161 75L129 107" stroke="#414141" stroke-width="2.5"/><circle cx="145" cy="91" r="6" fill="#f7c974" stroke="#414141" stroke-width="2"/></g>
+                  <path d="M39 91L79 51L112 94L145 91L116 52L83 51L61 91Z" fill="none" stroke="#414141" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M64 41Q74 19 108 29L125 44L110 55H75Z" fill="#f7c974" stroke="#414141" stroke-width="4"/>
+                  <path d="M100 33Q115 13 138 24L155 39L130 48L113 43Z" fill="#414141"/>
+                  <path d="M137 25L153 16L166 20L161 27" fill="none" stroke="#414141" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M55 44H92L102 53L84 64L58 58Z" fill="#414141"/><path d="M63 45H86" stroke="#f7c974" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M82 58L96 91H113L101 64Z" fill="#faeccf" stroke="#414141" stroke-width="3"/>
+                  <path d="M52 44L43 29L29 27" fill="none" stroke="#414141" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M25 27L45 28" stroke="#414141" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M128 48L145 91" fill="none" stroke="#414141" stroke-width="6" stroke-linecap="round"/>
+                  <path d="M65 100H101L119 93" fill="none" stroke="#414141" stroke-width="5" stroke-linecap="round"/>
+                  <circle cx="161" cy="39" r="6" fill="#f7c974" stroke="#414141" stroke-width="2"/>
+                  <path d="M62 35L64 23" stroke="#414141" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <div class="transport-cradle"></div>
+              </div>
+            </div>
+          </div>
+          <div class="factory-caption"><span>◉ &nbsp; 4 sensores · 4 estaciones · 3 brazos servo</span><span>ARDUINO UNO · SIN UTILIZAR D2</span></div>
+          <div class="machine-toolbar">
+            <button id="startBtn" class="button primary" type="button">▶ &nbsp; Iniciar recorrido</button>
+            <button id="pauseBtn" class="button secondary" type="button" disabled>Ⅱ &nbsp; Pausar</button>
+            <button id="resetBtn" class="button secondary" type="button">↺ &nbsp; Reiniciar</button>
+            <label class="speed-control" for="speedRange">Velocidad <input type="range" id="speedRange" min="0.5" max="2" step="0.25" value="1"><span id="speedLabel">1.0×</span></label>
+          </div>
+        </div>
+        <aside class="side-panel">
+          <span class="panel-label">Centro de diagnóstico</span><h2>Simula las fallas.</h2>
+          <p class="side-blurb">Activa fallas antes de que llegue la moto. En la cuarta estación el rodillo impulsa la rueda trasera, el Hall registra pulsos y luego el brazo se retira antes de mover la banda.</p>
+          <label class="switch-row"><span><strong>Faro apagado</strong><small>Luz insuficiente en el sensor</small></span><span class="switch"><input id="faultLight" type="checkbox" aria-label="Simular faro apagado"><span class="switch-track"></span></span></label>
+          <label class="switch-row"><span><strong>Motor recalentado</strong><small>Temperatura fuera del rango</small></span><span class="switch"><input id="faultTemp" type="checkbox" aria-label="Simular alta temperatura"><span class="switch-track"></span></span></label>
+          <label class="switch-row"><span><strong>Alerta de gases</strong><small>Índice MQ elevado</small></span><span class="switch"><input id="faultGas" type="checkbox" aria-label="Simular alerta de gases"><span class="switch-track"></span></span></label>
+          <label class="switch-row"><span><strong>Rueda con fricción alta</strong><small>Menos RPM y frenado más rápido</small></span><span class="switch"><input id="faultBearing" type="checkbox" aria-label="Simular rueda con fricción alta"><span class="switch-track"></span></span></label>
+          <label class="switch-row"><span><strong>Imán de rueda ausente</strong><small>El Hall no registra vueltas</small></span><span class="switch"><input id="faultHall" type="checkbox" aria-label="Simular imán ausente en la rueda trasera"><span class="switch-track"></span></span></label>
+          <div class="actuator-readout"><span>Servo 01 · Fotocelda</span><b id="servoLightStatus">RETRAÍDO</b></div>
+          <div class="actuator-readout"><span>Servo 02 · Gases</span><b id="servoGasStatus">RETRAÍDO</b></div>
+          <div class="actuator-readout"><span>Servo 03 · Rodillo</span><b id="servoHallStatus">RETRAÍDO</b></div>
+          <div class="actuator-readout"><span>Motor de la rueda</span><b id="wheelDriveStatus">APAGADO</b></div>
+          <div class="side-note"><strong>NOTA DEL PROTOTIPO</strong>Las RPM y los tiempos son simulados. El Hall mide vueltas, no el estado interno del rodamiento. Una desaceleración rápida puede sugerir fricción, pero no prueba por sí sola que esté dañado.</div>
+        </aside>
+      </section>
+
+      <section class="results" aria-label="Resultados de los sensores">
+        <div class="result-card" id="card0"><div class="result-icon">◉</div><div><div class="result-title">01 / Faro delantero</div><div class="result-measure" id="measure0">—</div><div id="result0" class="result-status">Aún sin revisar</div></div></div>
+        <div class="result-card" id="card1"><div class="result-icon">♨</div><div><div class="result-title">02 / Temperatura</div><div class="result-measure" id="measure1">—</div><div id="result1" class="result-status">Aún sin revisar</div></div></div>
+        <div class="result-card" id="card2"><div class="result-icon">≋</div><div><div class="result-title">03 / Gases</div><div class="result-measure" id="measure2">—</div><div id="result2" class="result-status">Aún sin revisar</div></div></div>
+        <div class="result-card" id="cardHall"><div class="result-icon">◉</div><div><div class="result-title">04 / Giro de rueda · Hall</div><div class="result-measure" id="measureHall">—</div><div id="resultHall" class="result-status">Esperando la moto</div><small id="hallDetails">0 pulsos · desaceleración —</small></div></div>
+      </section>
+
+      <section class="wiring-section" aria-label="Sensores y cableado orientativo">
+        <div class="wiring-top"><div><span class="panel-label">Electrónica de la maqueta</span><h2 class="section-title" style="margin:3px 0 0">Los cuatro sensores y sus conexiones</h2><p>Selecciona una tarjeta para resaltar su sensor y sus cables en la escena. Los pines corresponden al Arduino Uno y evitan el D2 que tienes bloqueado.</p></div><span class="chip">4 SENSORES · 11 SALIDAS</span></div>
+        <div class="wiring-grid">
+          <button type="button" class="sensor-card selected" data-sensor="0"><span class="pin-chip">ENTRADA A0</span><strong>01 · LDR / Fotocelda</strong><small>Un servomotor acerca el sensor frente al faro cuando la banda se detiene. LDR con divisor resistivo de 10 kΩ.</small></button>
+          <button type="button" class="sensor-card" data-sensor="1"><span class="pin-chip">I²C · A4 / A5</span><strong>02 · MLX90614</strong><small>Termómetro infrarrojo fijo, apuntado al motor a escala. No necesita tocar la moto; la medición depende del tamaño y distancia del objetivo.</small></button>
+          <button type="button" class="sensor-card" data-sensor="2"><span class="pin-chip">ENTRADA A2</span><strong>03 · MQ-2</strong><small>El segundo servo coloca el módulo de gases detrás de la moto y lo retira antes del siguiente movimiento. Su salida analógica es AO.</small></button>
+          <button type="button" class="sensor-card" data-sensor="3"><span class="pin-chip">ENTRADA D3</span><strong>04 · Hall + rueda motorizada</strong><small>Un servo aproxima un rodillo impulsado por un motor DC. Un imán en la rueda trasera pasa frente al Hall una vez por vuelta; se calculan RPM y tiempo de desaceleración.</small></button>
+        </div>
+        <div class="wiring-map">
+          <div><strong>Mapa propuesto para Arduino Uno</strong><ul><li><strong>Entradas:</strong> A0 luz, A2 gases, D3 pulsos Hall; MLX90614 por I²C (A4 SDA y A5 SCL).</li><li><strong>Actuadores:</strong> D5 motor de banda (driver), D9 servo fotocelda, D10 servo gases, D13 servo del rodillo y A1 como salida digital al driver del motor de rueda.</li><li><strong>Seis LED discretos:</strong> D4 y D6 (faro), D7 y D8 (temperatura), D11 y D12 (gases), cada uno con resistencia.</li></ul></div>
+          <div><strong>Cómo interpretar los cables</strong><div class="wire-legend"><span><i style="background:#f7c974"></i>Señal</span><span><i style="background:#faeccf;border:1px solid #414141"></i>Alimentación</span><span><i style="background:#414141"></i>GND</span></div><p style="margin:10px 0 0">Un imán por vuelta: <strong>RPM = 60 ÷ segundos entre pulsos Hall</strong>. Las rutas 3D son esquemáticas. Verifica el voltaje del MLX90614. Los tres servos usan fuente externa de 5 V regulados y GND común. Ambos motores necesitan driver y alimentación propia; nunca desde pines Arduino. La rueda debe quedar libre. A1 es salida digital y D2 no se usa.</p></div>
+        </div>
+      </section>
+
+      <section class="below" aria-label="Exploración de fases">
+        <div><h2 class="section-title">Explora las fases <span style="font-weight:500;font-size:13px;letter-spacing:0">· Haz clic para ir directamente</span></h2><div class="steps">
+          <button class="step" data-jump="0" type="button"><span class="step-num">01</span><span><strong>Revisión del faro</strong><small>Fotocelda · El sensor compara la luz con un umbral</small></span><span class="step-arrow">↗</span></button>
+          <button class="step" data-jump="1" type="button"><span class="step-num">02</span><span><strong>Temperatura del motor</strong><small>Sensor IR MLX90614 · Medición sin contacto</small></span><span class="step-arrow">↗</span></button>
+          <button class="step" data-jump="2" type="button"><span class="step-num">03</span><span><strong>Revisión de gases</strong><small>Sensor MQ-2 · Indicador relativo de exposición</small></span><span class="step-arrow">↗</span></button>
+          <button class="step" data-jump="3" type="button"><span class="step-num">04</span><span><strong>Prueba de giro de rueda</strong><small>Servo + rodillo motorizado + Hall · RPM y desaceleración</small></span><span class="step-arrow">↗</span></button>
+        </div></div>
+        <div><h2 class="section-title">Monitor de estación</h2><div class="readout" aria-live="polite"><div class="readout-top"><span class="panel-label">INSPECCIÓN EN CURSO</span><span id="readoutBadge" class="readout-badge">PREPARADO</span></div><h3 id="readoutTitle">Moto lista para iniciar</h3><p id="readoutDescription">Pulsa “Iniciar recorrido” para ver la banda y cada estación en funcionamiento.</p><div id="readoutValue" class="readout-value">0 / 3</div><div class="meter"><div id="meterFill" class="meter-fill"></div></div><div class="readout-foot"><span id="readoutStage">ESTACIÓN —</span><span id="readoutCounter">0 pruebas completadas</span></div></div></div>
+      </section>
+      <footer class="footer-note"><span><strong>MOTO-CHECK / LAB</strong> · La banda se bloquea durante las cuatro inspecciones y espera a que los brazos se retiren</span><span>4 sensores · 3 servos · 2 motores · 6 LED · Datos simulados</span></footer>
+    </main>
+  </div>
+  <script>
+/* MOTO-CHECK: escena 3D de geometría propia, sin bibliotecas ni modelos externos. */
+(function(){
+  'use strict';
+  const C={graphite:'#414141',amber:'#f7c974',cream:'#faeccf',paper:'#f8f8f8',red:'#ef4444',green:'#22c55e'};
+  const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+  const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+  const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+  const scale=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+  const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const norm=a=>{const l=Math.hypot(...a)||1;return scale(a,1/l)};
+  const stageX=[-3,-.7,1.6];
+  const hallX=3.8;
+  function create(canvas,getState,onSensorSelect=()=>{}){
+    const ctx=canvas.getContext('2d',{alpha:false});
+    if(!ctx)throw new Error('Este navegador no admite Canvas 2D');
+    let width=900,height=490,dpr=1,last=0,beltPhase=0;
+    let yaw=-.58,pitch=.55,distance=14.5;
+    let camera=null,faces=[],badgeHits=[],sensorHits=[],showWires=true,focusedSensor=0;
+    let pointer=null,dragged=false;
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      width=Math.max(280,rect.width);height=Math.max(260,rect.height);
+      dpr=Math.min(window.devicePixelRatio||1,2);
+      canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    const watcher=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
+    if(watcher)watcher.observe(canvas);else window.addEventListener('resize',resize);
+    resize();
+    function cameraFrame(){
+      const target=[0,1.38,0];
+      const pos=[distance*Math.sin(yaw)*Math.cos(pitch),target[1]+distance*Math.sin(pitch),distance*Math.cos(yaw)*Math.cos(pitch)];
+      const forward=norm(sub(target,pos));
+      const right=norm(cross(forward,[0,1,0]));
+      const up=norm(cross(right,forward));
+      return {pos,forward,right,up,focal:Math.min(width*1.23,height*1.95)};
+    }
+    function project(p){
+      const v=sub(p,camera.pos),z=dot(v,camera.forward);
+      const f=camera.focal/Math.max(.12,z);
+      return {x:width*.5+dot(v,camera.right)*f,y:height*.55-dot(v,camera.up)*f,z};
+    }
+    function face(points,color,opacity=1){
+      faces.push({points,color,opacity,depth:points.reduce((sum,p)=>sum+dot(sub(p,camera.pos),camera.forward),0)/points.length});
+    }
+    function box(x,y,z,w,h,d,color,opacity=1){
+      const a=w/2,b=h/2,c=d/2;
+      const v=[[x-a,y-b,z-c],[x+a,y-b,z-c],[x+a,y+b,z-c],[x-a,y+b,z-c],[x-a,y-b,z+c],[x+a,y-b,z+c],[x+a,y+b,z+c],[x-a,y+b,z+c]];
+      const parts=[[[0,1,2,3],.68],[[4,5,6,7],.90],[[0,4,7,3],.73],[[1,5,6,2],.82],[[3,2,6,7],1],[[0,1,5,4],.52]];
+      for(const [indices,light] of parts)face(indices.map(i=>v[i]),color,opacity*light);
+    }
+    function beam(a,b,thickness,color,opacity=1){
+      const along=norm(sub(b,a));
+      let u=norm(cross(along,[0,0,1]));
+      if(Math.hypot(...cross(along,[0,0,1]))<.04)u=norm(cross(along,[0,1,0]));
+      const v=norm(cross(along,u));
+      const pts=[];
+      for(const p of [a,b])for(const su of [-1,1])for(const sv of [-1,1])pts.push(add(add(p,scale(u,su*thickness)),scale(v,sv*thickness)));
+      const sides=[[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]];
+      sides.forEach((ids,i)=>face(ids.map(n=>pts[n]),color,[.81,.95,.69,.91,.75,1][i]*opacity));
+    }
+    function discZ(x,y,z,r,thickness,color,segments=18){
+      const far=[],near=[];
+      for(let i=0;i<segments;i++){
+        const t=i/segments*Math.PI*2;
+        far.push([x+Math.cos(t)*r,y+Math.sin(t)*r,z-thickness/2]);
+        near.push([x+Math.cos(t)*r,y+Math.sin(t)*r,z+thickness/2]);
+      }
+      face([...far].reverse(),color,.8);face(near,color,1);
+      for(let i=0;i<segments;i++){const j=(i+1)%segments;face([far[i],far[j],near[j],near[i]],color,.88)}
+    }
+    function ellipsoid(cx,cy,cz,rx,ry,rz,color){
+      const rings=7,segments=12;
+      const xyz=(lat,lon)=>[cx+rx*Math.cos(lat)*Math.cos(lon),cy+ry*Math.sin(lat),cz+rz*Math.cos(lat)*Math.sin(lon)];
+      for(let i=0;i<rings;i++){
+        const a=-Math.PI/2+i*Math.PI/rings,b=-Math.PI/2+(i+1)*Math.PI/rings;
+        for(let j=0;j<segments;j++){
+          const t=j*Math.PI*2/segments,u=(j+1)*Math.PI*2/segments;
+          face([xyz(a,t),xyz(a,u),xyz(b,u),xyz(b,t)],color,.66+.34*(i+1)/rings);
+        }
+      }
+    }
+    function wheel(x,y,z,spin){
+      discZ(x,y,z,.315,.19,C.graphite,24);
+      discZ(x,y,z+.109,.244,.012,C.paper,24);
+      discZ(x,y,z-.109,.244,.012,C.cream,24);
+      for(let side of [-1,1]){
+        for(let i=0;i<6;i++){
+          const a=i*Math.PI/3+spin;
+          beam([x,y,z+side*.13],[x+Math.cos(a)*.226,y+Math.sin(a)*.226,z+side*.12],.014,C.graphite);
+        }
+        discZ(x,y,z+side*.148,.062,.024,C.amber,16);
+      }
+    }
+    function bike(x,state){
+      const z=0,y=1.10;
+      // Palé con apoyos: la moto permanece estable durante el transporte.
+      box(x,.852,0,1.88,.105,.78,C.amber);
+      box(x-.64,.94,.19,.10,.20,.09,C.graphite);
+      box(x+.64,.94,.19,.10,.20,.09,C.graphite);
+      // La moto se transporta en palé: sus ruedas NO giran durante el viaje.
+      // Solo gira la trasera cuando el rodillo motorizado de la estación 04 la impulsa.
+      wheel(x-.61,y,z,state.wheelAngle||0);wheel(x+.62,y,z,0);
+      const P=(dx,dy,dz=0)=>[x+dx,dy,z+dz];
+      const links=[[-.61,1.1,-.05,1.55],[ -.05,1.55,.60,1.1],[.60,1.1,-.23,1.19],[-.23,1.19,-.61,1.1],[-.35,1.58,.15,1.63],[.40,1.65,.62,1.1]];
+      links.forEach(([x1,y1,x2,y2])=>beam(P(x1,y1),P(x2,y2),.038,C.graphite));
+      box(x-.13,1.28,0,.37,.29,.36,C.graphite);
+      box(x-.13,1.30,.20,.19,.15,.025,C.cream);
+      ellipsoid(x+.13,1.65,0,.44,.18,.28,C.amber);
+      box(x-.43,1.72,0,.52,.12,.42,C.graphite);
+      box(x+.49,1.52,0,.13,.22,.20,C.amber);
+      beam(P(.44,1.78),P(.60,1.88),.027,C.graphite);
+      beam(P(.60,1.88,-.33),P(.60,1.88,.33),.024,C.graphite);
+      beam(P(-.24,1.18,.24),P(-.73,1.23,.25),.041,C.cream);
+      box(x-.81,1.24,.26,.36,.11,.14,C.graphite);
+      ellipsoid(x+.81,1.58,0,.115,.115,.145,document.getElementById('faultLight')?.checked?C.graphite:C.amber);
+      beam(P(.69,1.70),P(.81,1.60),.024,C.graphite);
+      // Imán pegado a la llanta trasera: produce un pulso por revolución.
+      if(!document.getElementById('faultHall')?.checked){
+        const a=(state.wheelAngle||0)+Math.PI/2;
+        discZ(x-.61+Math.cos(a)*.23,y+Math.sin(a)*.23,.168,.065,.046,C.amber,16);
+      }
+      // Pequeño brazo de sujeción del chasis al palé.
+      beam(P(-.10,.92,.29),P(-.10,1.31,.20),.028,C.graphite);
+    }
+    function servoGeometry(i,progress){
+      const deployed=clamp(progress||0,0,1)*Math.PI/2;
+      const light=i===0;
+      const x=stageX[i]+(light?.92:-.92), y=light?1.61:1.26,z=1.20;
+      const span=light?.99:1.00;
+      return {
+        pivot:[x,y,z],
+        tip:[x+(light?1:-1)*span*Math.cos(deployed),y,z-span*Math.sin(deployed)],
+        progress:clamp(progress||0,0,1)
+      };
+    }
+    function wheelRig(progress){
+      const theta=clamp(progress||0,0,1)*Math.PI/2;
+      const pivot=[hallX-.61-.31,1.10,1.15];
+      const tip=[pivot[0]+.95*Math.cos(theta),pivot[1],pivot[2]-.95*Math.sin(theta)];
+      return {pivot,tip};
+    }
+    function sensorAnchors(state){
+      return [servoGeometry(0,state.servoLight).tip,[-.7,2.65,.03],servoGeometry(2,state.servoGas).tip,[hallX-.61,1.37,.32]];
+    }
+    function cable(points,color,opacity=.88,thickness=.017){
+      for(let i=1;i<points.length;i++)beam(points[i-1],points[i],thickness,color,opacity);
+    }
+    function electronics(state){
+      // Mesa de electrónica contigua a la banda: Arduino Uno y etapa de potencia.
+      box(-3.57,.015,2.18,1.65,.09,.87,C.graphite);
+      box(-3.62,.074,2.17,1.44,.035,.68,C.amber);
+      box(-3.38,.100,2.12,.48,.10,.35,C.graphite);
+      box(-4.21,.099,2.32,.20,.12,.26,C.cream);
+      for(let j=0;j<8;j++){
+        box(-4.20+j*.17,.13,1.79,.08,.10,.09,C.graphite);
+        box(-4.20+j*.17,.13,2.53,.08,.10,.09,C.graphite);
+      }
+      // MOSFET / controlador de motor y alimentación separada.
+      box(-5.30,.05,2.26,.64,.13,.55,C.graphite);
+      box(-5.39,.135,2.26,.34,.035,.32,C.amber);
+      box(-5.88,.02,2.25,.41,.11,.43,C.cream);
+      box(-5.88,.095,2.25,.22,.018,.18,C.graphite);
+      // Controlador independiente del pequeño motor que hace girar la rueda.
+      box(-2.36,.06,2.22,.63,.15,.48,C.graphite);
+      box(-2.38,.14,2.24,.37,.035,.27,C.amber);
+      // La salida D5 nunca alimenta directamente al motor.
+      if(showWires){
+        cable([[-4.10,.15,2.23],[-4.80,.15,2.23],[-5.25,.15,2.26]],C.amber,.94,.025);
+        cable([[-5.28,.14,2.06],[-5.28,.31,1.73],[-5.28,.31,1.61]],C.graphite,.94,.026);
+        cable([[-5.60,.15,2.22],[-5.84,.15,2.22]],C.amber,.92,.026);
+      }
+      // Entradas: 3 hilos para LDR/MQ/Hall y 4 para el MLX90614 (SDA y SCL).
+      sensorAnchors(state).forEach((end,i)=>{
+        if(!showWires)return;
+        const startX=-4.17+i*.23;
+        const lines=i===1?4:3;
+        for(let j=0;j<lines;j++){
+          const shift=(j-(lines-1)/2)*.075;
+          const col=[C.amber,C.cream,C.graphite,C.amber][j];
+          const opacity=focusedSensor===i ? .98 : .47;
+          const pivot=i===0||i===2?servoGeometry(i,i===0?state.servoLight:state.servoGas).pivot:null;
+          const cablePath=[
+            [startX,.16,2.52+shift],
+            [startX,.18,1.72+shift],
+            [end[0],.18,1.72+shift],
+            [pivot?pivot[0]:end[0],pivot?pivot[1]:end[1],pivot?pivot[2]+shift:1.72+shift],
+            [end[0],end[1],end[2]]
+          ];
+          cable(cablePath,col,opacity,.014);
+        }
+      });
+      // Control PWM D9 / D10 y alimentación de ambos servos desde fuente externa.
+      [0,2].forEach((station,i)=>{
+        if(!showWires)return;
+        const pivot=servoGeometry(station,0).pivot;
+        const start=[-3.28+i*.17,.17,2.53];
+        cable([start,[start[0],.22,1.88],[pivot[0],.22,1.88],[pivot[0],pivot[1],pivot[2]]],C.amber,.93,.023);
+        cable([[-5.88,.14,2.25],[-5.80,.20,2.06],[pivot[0],.20,2.06],[pivot[0],pivot[1],pivot[2]]],C.cream,.53,.018);
+        cable([[-4.30,.13,2.53],[-4.33,.17,2.14],[pivot[0],.17,2.14],[pivot[0],pivot[1],pivot[2]]],C.graphite,.61,.016);
+      });
+      if(showWires){
+        const rig=wheelRig(state.servoHall);
+        // Servo 03 D13: señal + alimentación + GND al pivote del rodillo.
+        cable([[-3.13,.17,2.55],[-3.13,.21,1.92],[rig.pivot[0],.21,1.92],rig.pivot],C.amber,.94,.021);
+        cable([[-5.88,.14,2.25],[-5.75,.19,2.47],[rig.pivot[0],.19,2.47],rig.pivot],C.cream,.55,.015);
+        cable([[-4.25,.14,2.53],[-4.25,.18,2.32],[rig.pivot[0],.18,2.32],rig.pivot],C.graphite,.65,.015);
+        // A1 salida digital → driver → motor DC independiente del rodillo.
+        cable([[-3.19,.16,2.54],[-2.43,.17,2.54],[-2.43,.17,2.23]],C.amber,.98,.023);
+        cable([[-2.22,.17,2.24],[-2.22,.26,1.81],[rig.pivot[0],.26,1.81],[rig.tip[0],rig.tip[1],rig.tip[2]]],C.amber,.83,.019);
+      }
+      // Seis LED independientes: rojo y verde en cada estación (D4,D6,D7,D8,D11,D12).
+      stageX.forEach((x,i)=>{
+        if(!showWires)return;
+        for(let j=0;j<2;j++){
+          const offset=j*.13;
+          cable([
+            [-3.50+i*.16,.17,2.53+offset],
+            [-3.50+i*.16,.23,1.84+offset],
+            [x,.23,1.84+offset],
+            [x,3.34,1.84+offset],
+            [x+(j===0?-.11:.11),3.34,1.24]
+          ],j===0?C.red:C.green,.51,.013);
+        }
+      });
+    }
+    function modelSensors(state){
+      const light=servoGeometry(0,state.servoLight);
+      const gas=servoGeometry(2,state.servoGas);
+      // 01: servo aparcado al costado; gira la LDR al frente del faro.
+      beam([light.pivot[0],.86,light.pivot[2]],light.pivot,.058,C.graphite);
+      box(light.pivot[0],light.pivot[1],light.pivot[2],.33,.24,.30,C.amber);
+      ellipsoid(...light.pivot,.11,.12,.11,C.graphite);
+      beam(light.pivot,light.tip,.042,C.graphite);
+      box(light.tip[0],light.tip[1],light.tip[2],.25,.20,.24,focusedSensor===0?C.amber:C.cream);
+      ellipsoid(light.tip[0]-.095,light.tip[1],light.tip[2],.067,.07,.07,C.graphite);
+      cable([[light.pivot[0],light.pivot[1]+.10,light.pivot[2]],[light.tip[0],light.tip[1]+.08,light.tip[2]]],C.amber,.95,.012);
+      // 02: MLX90614 sin contacto, fijado arriba y apuntado al motor.
+      beam([-.70,3.04,0],[-.70,2.65,0],.025,C.graphite);
+      box(-.70,2.62,0,.24,.19,.23,focusedSensor===1?C.amber:C.cream);
+      ellipsoid(-.70,2.49,0,.086,.066,.086,C.graphite);
+      // 03: servo reubica el MQ-2 a la altura de la salida de escape.
+      beam([gas.pivot[0],.86,gas.pivot[2]],gas.pivot,.058,C.graphite);
+      box(gas.pivot[0],gas.pivot[1],gas.pivot[2],.36,.23,.31,C.amber);
+      ellipsoid(...gas.pivot,.11,.11,.11,C.graphite);
+      beam(gas.pivot,gas.tip,.045,C.graphite);
+      box(gas.tip[0],gas.tip[1]-.06,gas.tip[2],.39,.17,.33,C.graphite);
+      discZ(gas.tip[0],gas.tip[1]+.055,gas.tip[2]+.18,.18,.13,focusedSensor===2?C.amber:C.cream,20);
+      for(let i=0;i<7;i++){
+        const dx=(i-3)*.049;
+        beam([gas.tip[0]+dx,gas.tip[1]-.05,gas.tip[2]+.26],[gas.tip[0]+dx,gas.tip[1]+.17,gas.tip[2]+.26],.007,C.graphite);
+      }
+      cable([[gas.pivot[0],gas.pivot[1]+.09,gas.pivot[2]],[gas.tip[0],gas.tip[1]+.11,gas.tip[2]]],C.amber,.95,.012);
+      // 04: sensor Hall fijo a unos milímetros del borde de la llanta trasera.
+      const rearX=hallX-.61;
+      beam([hallX,2.90,1.13],[rearX,1.43,.51],.027,C.graphite);
+      box(rearX,1.37,.39,.26,.22,.24,focusedSensor===3?C.amber:C.graphite);
+      box(rearX,1.36,.25,.13,.09,.026,C.cream);
+      if(state.hallPulses>0)box(rearX,1.57,.40,.08,.08,.08,C.amber);
+      // Servo 03 mueve un MOTOR + RODILLO, no intenta hacer girar la rueda por sí solo.
+      const rig=wheelRig(state.servoHall);
+      beam([rig.pivot[0],.87,rig.pivot[2]],rig.pivot,.062,C.graphite);
+      box(...rig.pivot,.34,.25,.33,C.amber);
+      ellipsoid(...rig.pivot,.11,.10,.11,C.graphite);
+      beam(rig.pivot,rig.tip,.045,C.graphite);
+      box(rig.tip[0]+.15,rig.tip[1],rig.tip[2]+.08,.33,.25,.25,state.wheelMotorOn?C.amber:C.graphite);
+      discZ(rig.tip[0],rig.tip[1],rig.tip[2],.145,.13,C.graphite,20);
+      discZ(rig.tip[0],rig.tip[1],rig.tip[2]+.075,.088,.014,C.cream,20);
+      cable([[rig.pivot[0],rig.pivot[1]+.09,rig.pivot[2]],[rig.tip[0],rig.tip[1]+.10,rig.tip[2]]],C.amber,.98,.015);
+    }
+    function build(now,state){
+      faces=[];
+      // Plano de maqueta, bastidor y patas de la banda.
+      box(0,-.13,.45,12.1,.13,5.3,C.paper,.9);
+      box(0,.46,0,10.55,.48,1.75,C.graphite);
+      box(0,.73,0,10.15,.10,1.54,C.cream);
+      box(0,.80,0,9.68,.06,1.47,C.graphite);
+      for(const x of [-4.4,4.4])for(const z of [-.69,.69])box(x,.17,z,.16,.54,.17,C.graphite);
+      for(const z of [-.86,.86])box(0,.34,z,10.3,.14,.12,C.amber,.95);
+      for(let i=0;i<28;i++){
+        let x=-4.73+i*.36+(beltPhase%.36);
+        if(x>4.83)x-=9.72;
+        box(x,.855,0,.085,.028,1.43,C.amber,.86);
+      }
+      // Dos rodillos transversales: uno motriz y otro libre.
+      for(const x of [-5.03,5.03]){
+        discZ(x,.51,0,.24,.10,C.amber,18);
+        for(const z of [-.97,.97])box(x,.51,z,.10,.36,.14,C.graphite);
+      }
+      box(-5.28,.28,1.27,.71,.48,.64,C.graphite);
+      box(-5.32,.39,1.60,.42,.12,.07,C.amber);
+      beam([-5.05,.49,1.10],[-5.03,.51,.87],.06,C.graphite);
+      // Pórticos de inspección, luz y sensor suspendido.
+      stageX.forEach((x,i)=>{
+        const active=state.current===i;
+        const bar=active?C.amber:C.graphite;
+        for(const z of [-1.11,1.11]){
+          box(x,1.95,z,.17,2.44,.17,C.graphite);
+          box(x,.72,z,.34,.13,.35,C.amber);
+        }
+        box(x,3.14,0,.26,.19,2.35,bar);
+        box(x,2.95,0,.34,.22,.45,C.graphite);
+        box(x,2.80,0,.19,.13,.18,C.amber);
+        box(x,3.35,1.11,.59,.33,.20,C.graphite);
+        // Dos salidas LED reales, una roja y una verde por estación.
+        const r=state.results[i];
+        discZ(x-.12,3.36,1.24,.083,.035,r&&!r.pass?C.red:C.cream,18);
+        discZ(x+.12,3.36,1.24,.083,.035,r&&r.pass?C.green:C.cream,18);
+        box(x,2.97,1.15,.40,.10,.09,C.amber);
+        // Estructura lateral para resaltar el montaje físico de cada módulo.
+        box(x-.42,.73,-1.23,.30,.37,.37,C.cream,.96);
+      });
+      // Cuarto pórtico: comprobación magnética de salida, sin semáforo adicional.
+      for(const z of [-1.11,1.11]){
+        box(hallX,1.95,z,.17,2.44,.17,C.graphite);
+        box(hallX,.72,z,.34,.13,.35,C.amber);
+      }
+      box(hallX,3.14,0,.26,.19,2.35,state.current===3?C.amber:C.graphite);
+      box(hallX,3.35,1.11,.56,.35,.22,C.graphite);
+      box(hallX,3.35,1.25,.35,.12,.025,C.amber);
+      // Sensores físicos y cableado que llega a cada módulo.
+      modelSensors(state);
+      electronics(state);
+      // Baliza de final de recorrido (sin ocupar una entrada de detección).
+      box(4.89,1.10,-1.05,.21,.47,.21,C.graphite);
+      box(4.89,1.37,-1.05,.15,.10,.17,C.cream);
+      // Trayectoria de la moto: del extremo izquierdo al derecho.
+      const bikeX=-5+(state.position/100)*10;
+      bike(bikeX,state);
+    }
+    function drawBackground(){
+      ctx.fillStyle=C.cream;ctx.fillRect(0,0,width,height);
+      ctx.strokeStyle='rgba(65,65,65,.09)';ctx.lineWidth=1;
+      for(let x=-8;x<=8;x++){
+        const a=project([x,-.20,-5]),b=project([x,-.20,5]);
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      }
+      for(let z=-5;z<=5;z++){
+        const a=project([-8,-.20,z]),b=project([8,-.20,z]);
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      }
+    }
+    function drawFaces(){
+      faces.sort((a,b)=>b.depth-a.depth);
+      for(const f of faces){
+        const ps=f.points.map(project);
+        if(ps.some(p=>p.z<=0))continue;
+        ctx.globalAlpha=f.opacity;ctx.fillStyle=f.color;
+        ctx.beginPath();ctx.moveTo(ps[0].x,ps[0].y);
+        for(let j=1;j<ps.length;j++)ctx.lineTo(ps[j].x,ps[j].y);
+        ctx.closePath();ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
+    function pillPath(x,y,w,h,r){
+      r=Math.min(r,w/2,h/2);
+      ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+    }
+    function drawOverlays(state){
+      badgeHits=[];sensorHits=[];
+      ctx.textAlign='left';ctx.textBaseline='middle';
+      const names=['01 · FARO','02 · TEMPERATURA','03 · GASES','04 · RUEDA / HALL'];
+      const shortNames=['FARO','TEMP','GASES','RUEDA'];
+      const spots=[...stageX,hallX].map(x=>project([x,3.90,0]));
+      spots.forEach((p,i)=>{
+        const w=width<560?75:130,h=30;
+        const x=clamp(p.x-w/2,5,width-w-5),y=clamp(p.y-h-7,39,height-55);
+        const current=state.current===i,result=i===3?(['pending','measuring'].includes(state.hallStatus)?null:{pass:state.hallStatus==='detected'}):state.results[i];
+        ctx.fillStyle=current?C.amber:C.graphite;pillPath(x,y,w,h,16);ctx.fill();
+        ctx.fillStyle=current?C.graphite:C.cream;ctx.font=`900 ${width<560?9:11}px Urbanist, sans-serif`;
+        ctx.fillText(width<560?shortNames[i]:names[i],x+10,y+16,w-25);
+        ctx.beginPath();ctx.arc(x+w-14,y+15,5,0,Math.PI*2);
+        ctx.fillStyle=result?(result.pass?C.green:C.red):current?C.graphite:C.amber;ctx.fill();
+        badgeHits.push({i,x,y,w,h});
+      });
+      const labels=['A0 · LDR','I²C · MLX90614','A2 · MQ-2','D3 · HALL'];
+      const light=servoGeometry(0,state.servoLight),gas=servoGeometry(2,state.servoGas);
+      const labelPositions=[[light.tip[0],light.tip[1]+.41,light.tip[2]],[-.7,2.34,.4],[gas.tip[0],gas.tip[1]+.44,gas.tip[2]+.2],[hallX-.61,1.73,.67]];
+      labelPositions.forEach((point,i)=>{
+        const p=project(point),w=i===1?(width<560?110:137):(width<560?91:111),h=27;
+        const x=clamp(p.x-w/2,3,width-w-3),y=clamp(p.y-h/2,47,height-55);
+        ctx.fillStyle=focusedSensor===i?C.amber:C.paper;
+        pillPath(x,y,w,h,15);ctx.fill();
+        ctx.strokeStyle=C.graphite;ctx.lineWidth=focusedSensor===i?1.8:.6;ctx.stroke();
+        ctx.fillStyle=C.graphite;ctx.font=`900 ${width<560?10:11}px Urbanist, sans-serif`;
+        ctx.fillText(labels[i],x+10,y+14,w-20);
+        sensorHits.push({i,x,y,w,h});
+      });
+      const arduino=project([-3.54,.18,2.47]);
+      ctx.font='900 11px Urbanist, sans-serif';ctx.fillStyle=C.graphite;
+      ctx.fillText('ARDUINO UNO',arduino.x-38,arduino.y+20);
+      const driver=project([-5.30,.18,2.48]);
+      ctx.font='800 10px Urbanist, sans-serif';ctx.fillText('DRIVER D5',driver.x-28,driver.y+23);
+      const wheelDriver=project([-2.36,.18,2.46]);
+      ctx.fillText('DRIVER RUEDA · A1',wheelDriver.x-43,wheelDriver.y+23);
+      [[0,'SERVO 01 · D9',light],[2,'SERVO 02 · D10',gas]].forEach(([,label,arm])=>{
+        const p=project([arm.pivot[0],arm.pivot[1]+.23,arm.pivot[2]]);
+        ctx.font='900 10px Urbanist, sans-serif';ctx.fillStyle=C.graphite;
+        ctx.fillText(label,p.x-29,p.y-5);
+      });
+      const hallRig=wheelRig(state.servoHall);
+      const hallServo=project([hallRig.pivot[0],hallRig.pivot[1]+.33,hallRig.pivot[2]]);
+      ctx.fillText('SERVO 03 · D13',hallServo.x-40,hallServo.y-5);
+      if(state.current===3){
+        const rpm=project([hallX,2.50,0]);
+        const r=state.hallPulses>=2?Math.round(state.hallPeakRpm)+' RPM':state.wheelMotorOn?'CONTANDO PULSOS':'PRUEBA DE GIRO';
+        ctx.fillStyle=C.graphite;ctx.font='900 12px Urbanist, sans-serif';ctx.fillText(r,rpm.x-35,rpm.y);
+      }
+      if(showWires){
+        ctx.font='900 10px Urbanist, sans-serif';ctx.textAlign='center';
+        ctx.fillText('CABLEADO ESQUEMÁTICO · 5 V / GND / SEÑALES',width*.5,height-20);
+        ctx.textAlign='left';
+      }
+      const m=project([-5.30,.11,1.32]);
+      const note='MOTORREDUCTOR';
+      if(m.x>0&&m.x<width-100){
+        ctx.font='800 10px Urbanist, sans-serif';ctx.fillStyle=C.graphite;ctx.fillText(note,m.x-30,m.y+25);
+      }
+      ctx.font='800 11px Urbanist, sans-serif';ctx.fillStyle=C.graphite;
+      ctx.textAlign='right';ctx.fillText('BANDA EN UN SOLO SENTIDO  →',width-18,height-43);
+      ctx.textAlign='left';
+    }
+    function frame(now){
+      const dt=last?Math.min(70,now-last):16;last=now;
+      const state=getState();
+      if(state.mode==='moving'){
+        beltPhase+=(dt/1000)*.40*state.speed;
+      }
+      camera=cameraFrame();
+      drawBackground();build(now,state);drawFaces();drawOverlays(state);
+      requestAnimationFrame(frame);
+    }
+    function setView(view){
+      if(view==='side'){yaw=0;pitch=.19;distance=14.5}
+      else if(view==='top'){yaw=-.14;pitch=1.36;distance=14.9}
+      else{yaw=-.58;pitch=.55;distance=14.5}
+    }
+    canvas.addEventListener('pointerdown',e=>{
+      pointer={id:e.pointerId,x:e.clientX,y:e.clientY};dragged=false;canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove',e=>{
+      if(!pointer||pointer.id!==e.pointerId)return;
+      const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
+      if(Math.abs(dx)+Math.abs(dy)>2)dragged=true;
+      if(dragged){yaw=clamp(yaw-dx*.006,-1.30,1.30);pitch=clamp(pitch+dy*.005,.12,1.48)}
+      pointer.x=e.clientX;pointer.y=e.clientY;
+    });
+    canvas.addEventListener('pointerup',e=>{
+      if(pointer?.id!==e.pointerId)return;
+      if(!dragged){
+        const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+        const sensor=sensorHits.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);
+        if(sensor)onSensorSelect(sensor.i);
+        else{
+          const item=badgeHits.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);
+          if(item){
+            if(item.i===3)onSensorSelect(3);
+            else document.querySelector(`[data-jump="${item.i}"]`)?.click();
+          }
+        }
+      }
+      pointer=null;
+    });
+    canvas.addEventListener('pointercancel',()=>{pointer=null});
+    canvas.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance+e.deltaY*.012,8,26)},{passive:false});
+    canvas.addEventListener('keydown',e=>{
+      if(e.key==='ArrowLeft')yaw=clamp(yaw+.12,-1.3,1.3);
+      else if(e.key==='ArrowRight')yaw=clamp(yaw-.12,-1.3,1.3);
+      else if(e.key==='ArrowUp')pitch=clamp(pitch+.1,.12,1.48);
+      else if(e.key==='ArrowDown')pitch=clamp(pitch-.1,.12,1.48);
+      else if(e.key==='+'||e.key==='=')distance=clamp(distance-1,8,26);
+      else if(e.key==='-')distance=clamp(distance+1,8,26);
+      else return;
+      e.preventDefault();
+    });
+    requestAnimationFrame(frame);
+    return {setView,focusSensor(i){focusedSensor=clamp(i,0,3)},toggleWires(){showWires=!showWires;return showWires}};
+  }
+  window.MotoScene3D={create};
+})();
+
+</script>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const stages=[
+      {name:'Luminosidad',pos:20,good:82,bad:8,unit:'%',description:'La fotocelda comprueba si el faro ilumina suficientemente el punto de medición.',goodLabel:'FARO APROBADO',badLabel:'FARO DEFECTUOSO',fault:'faultLight'},
+      {name:'Temperatura',pos:43,good:39,bad:91,unit:'°C',description:'El sensor de temperatura comprueba la superficie del motor simulado.',goodLabel:'TEMPERATURA NORMAL',badLabel:'SOBRECALENTAMIENTO',fault:'faultTemp'},
+      {name:'Gases',pos:66,good:17,bad:84,unit:' / 100',description:'El sensor MQ muestra un índice relativo; no es una medición homologada de emisiones.',goodLabel:'SIN ALERTA DE GAS',badLabel:'ALERTA DETECTADA',fault:'faultGas'}
+    ];
+    const state={mode:'idle',position:6,target:0,current:-1,results:[null,null,null],hallStatus:'pending',hallAt:0,hallPulses:0,hallRpm:0,hallPeakRpm:0,hallLastPulse:0,hallStopTime:0,wheelAngle:0,wheelSpeed:0,wheelMotorOn:false,testedAt:0,holdUntil:0,speed:1,pausedFrom:null,lastFrame:0,servoLight:0,servoGas:0,servoHall:0,manualInspection:false};
+    const stationEls=[...document.querySelectorAll('.station')];
+    const stepEls=[...document.querySelectorAll('.step')];
+    const measured=['measure0','measure1','measure2'];
+    $('slats').innerHTML=Array.from({length:40},()=>'<i></i>').join('');
+    const scene=window.MotoScene3D.create($('scene3d'),()=>state,i=>selectSensor(i));
+    function selectSensor(i){
+      scene.focusSensor(i);
+      document.querySelectorAll('[data-sensor]').forEach(card=>card.classList.toggle('selected',Number(card.dataset.sensor)===i));
+      if(i<3){
+        const pins=['A0','I²C A4/A5','A2'];
+        const sensorNames=['LDR · Faro delantero','MLX90614 · Temperatura IR','MQ-2 · Gases'];
+        const r=state.results[i];
+        $('readoutTitle').textContent=sensorNames[i];
+        $('readoutDescription').textContent=stages[i].description+' En la escena se resalta el cable que llega a '+pins[i]+'.';
+        $('readoutValue').textContent=r?r.value+stages[i].unit:'—';
+        $('readoutBadge').textContent='ENTRADA '+pins[i];
+        $('readoutStage').textContent='CONEXIÓN DEL SENSOR';
+      }else{
+        $('readoutTitle').textContent='Hall · Giro de rueda trasera';
+        $('readoutDescription').textContent='El servo 03 posiciona un rodillo accionado por motor independiente. Cada vuelta de la rueda aproxima su imán al Hall, generando un pulso por revolución en D3.';
+        $('readoutValue').textContent=state.hallPulses>=2?Math.round(state.hallPeakRpm)+' RPM':'— RPM';
+        $('readoutBadge').textContent='ENTRADA D3';
+        $('readoutStage').textContent='ESTACIÓN 04 / RPM';
+      }
+    }
+    function testResult(i){const bad=$(stages[i].fault).checked;return {pass:!bad,value:bad?stages[i].bad:stages[i].good};}
+    function setPosition(p){state.position=p;$('bike').style.left=`${p}%`;}
+    function writePanel(i,override){
+      if(i<0){$('readoutTitle').textContent='Moto lista para iniciar';$('readoutDescription').textContent='Pulsa “Iniciar recorrido” para ver la banda y cada estación en funcionamiento.';$('readoutValue').textContent='0 / 4';$('readoutBadge').textContent='PREPARADO';$('readoutStage').textContent='ESTACIÓN —';$('meterFill').style.width='0%';return;}
+      const s=stages[i],r=state.results[i];
+      $('readoutTitle').textContent=`Estación 0${i+1} · ${s.name}`;
+      $('readoutDescription').textContent=override||(r?(r.pass?s.goodLabel:s.badLabel)+'. '+s.description:s.description);
+      $('readoutValue').textContent=r?`${r.value}${s.unit}`:'Analizando…';
+      $('readoutBadge').textContent=r?(r.pass?'APROBADO':'REVISAR'):'EN PRUEBA';
+      $('readoutStage').textContent=`SENSOR 0${i+1} / 04`;
+      $('meterFill').style.width=`${r?Math.min(100,r.value):28}%`;
+    }
+    function render(){
+      setPosition(state.position);
+      const moving=state.mode==='moving';
+      $('factory').classList.toggle('running',moving);
+      $('factory').classList.toggle('wheel-test',state.mode==='testing'&&state.current===3&&state.wheelSpeed>8);
+      $('factory').classList.toggle('wheel-tool-deployed',state.servoHall>.1);
+      $('statusDot').classList.toggle('running',moving||state.mode==='testing');
+      const labels={idle:'EN ESPERA',moving:'BANDA EN MARCHA',testing:'INSPECCIONANDO',paused:'EN PAUSA',complete:'RECORRIDO FINALIZADO',manual:'INSPECCIÓN MANUAL'};
+      $('systemStatus').textContent=state.mode==='testing'&&state.current===3&&state.wheelMotorOn?'MIDIENDO RPM':(labels[state.mode]||'EN ESPERA');
+      $('pauseBtn').disabled=['idle','complete','manual'].includes(state.mode);
+      $('pauseBtn').textContent=state.mode==='paused'?'▶  Continuar':'Ⅱ  Pausar';
+      $('startBtn').disabled=state.mode==='moving'||state.mode==='testing'||state.mode==='paused';
+      $('startBtn').textContent=state.mode==='complete'?'▶  Nuevo recorrido':'▶  Iniciar recorrido';
+      stationEls.slice(0,3).forEach((el,i)=>{
+        const res=state.results[i];el.classList.toggle('active',state.current===i);
+        el.querySelector('.lamp.red').classList.toggle('on',res?.pass===false);
+        el.querySelector('.lamp.green').classList.toggle('on',res?.pass===true);
+        el.querySelector('.signal-label').textContent=res?(res.pass?'APROBADA':'REVISAR'):(state.current===i&&state.mode==='testing'?'LEYENDO':'PENDIENTE');
+        const status=$('result'+i);status.textContent=res?(res.pass?'APROBADO':'REVISAR'):'Aún sin revisar';status.className='result-status'+(res?(res.pass?' pass':' fail'):'');
+        $(measured[i]).textContent=res?res.value+stages[i].unit:'—';
+        $('card'+i).classList.toggle('active',state.current===i);
+        stepEls[i].classList.toggle('selected',state.current===i);
+      });
+      $('readoutCounter').textContent=`${state.results.filter(Boolean).length+(['detected','failed','missed'].includes(state.hallStatus)?1:0)} pruebas completadas`;
+      updateActuators();
+      updateHall();
+    }
+    function updateActuators(){
+      const status=(p,active)=>p>=.98?'EN POSICIÓN':p>.015?'MOVIENDO':active?'PREPARANDO':'RETRAÍDO';
+      $('servoLightStatus').textContent=status(state.servoLight,state.mode==='testing'&&state.current===0);
+      $('servoGasStatus').textContent=status(state.servoGas,state.mode==='testing'&&state.current===2);
+      $('servoHallStatus').textContent=status(state.servoHall,state.mode==='testing'&&state.current===3);
+      $('wheelDriveStatus').textContent=state.mode==='paused'&&state.wheelMotorOn?'PAUSADO':state.wheelMotorOn?'GIRANDO':'APAGADO';
+      $('servoLightStatus').classList.toggle('extended',state.servoLight>.98);
+      $('servoGasStatus').classList.toggle('extended',state.servoGas>.98);
+      $('servoHallStatus').classList.toggle('extended',state.servoHall>.98);
+      $('wheelDriveStatus').classList.toggle('extended',state.wheelMotorOn);
+    }
+    function updateHall(){
+      $('measureHall').textContent=state.hallPulses>=2?Math.round(state.hallPeakRpm)+' RPM':'— RPM';
+      const status=$('resultHall');
+      const hallLabels={pending:'ESPERANDO LA RUEDA',measuring:'CONTANDO VUELTAS',detected:'GIRO SIN ALERTA',failed:'POSIBLE FRICCIÓN ALTA',missed:'SIN PULSOS HALL'};
+      status.textContent=hallLabels[state.hallStatus]||hallLabels.pending;
+      status.className='result-status'+(state.hallStatus==='detected'?' pass':['failed','missed'].includes(state.hallStatus)?' fail':'');
+      $('hallDetails').textContent=`${state.hallPulses} pulsos · desaceleración estimada ${state.hallPulses>=2&&state.hallStopTime?state.hallStopTime.toFixed(1)+' s':'—'}`;
+      $('cardHall').classList.toggle('active',state.current===3);
+      const hallStation=stationEls[3];hallStation.classList.toggle('active',state.current===3);
+      $('hallLineStatus').textContent=state.hallStatus==='pending'?'PENDIENTE':hallLabels[state.hallStatus];
+      stepEls[3].classList.toggle('selected',state.current===3);
+    }
+    function resetHallTest(){state.hallStatus='measuring';state.hallAt=0;state.hallPulses=0;state.hallRpm=0;state.hallPeakRpm=0;state.hallLastPulse=0;state.hallStopTime=0;state.wheelAngle=0;state.wheelSpeed=0;state.wheelMotorOn=false;state.servoHall=0}
+    function reset(){state.mode='idle';state.position=6;state.target=0;state.current=-1;state.results=[null,null,null];resetHallTest();state.hallStatus='pending';state.testedAt=0;state.holdUntil=0;state.servoLight=0;state.servoGas=0;state.manualInspection=false;state.pausedFrom=null;writePanel(-1);render()}
+    function start(){reset();state.mode='moving';state.target=0;render()}
+    function evaluate(i){state.results[i]=testResult(i);writePanel(i);render()}
+    function arrive(now){
+      if(state.target>=4){state.mode='complete';state.current=-1;const ok=state.results.every(r=>r&&r.pass)&&state.hallStatus==='detected';$('readoutTitle').textContent=ok?'Inspección completada':'Inspección con observaciones';$('readoutDescription').textContent=ok?'La moto pasó las tres pruebas y el Hall contó las vueltas de la rueda trasera sin alerta de fricción.':'La moto completó la misma ruta, pero alguna prueba produjo una alerta o la rueda no generó suficientes pulsos Hall.';$('readoutValue').textContent=ok?'4 / 4 OK':'REVISAR';$('readoutBadge').textContent='FINALIZADO';$('readoutStage').textContent='SALIDA';$('meterFill').style.width='100%';render();return}
+      state.current=state.target;state.mode='testing';state.testedAt=now;
+      if(state.current===3){resetHallTest();state.holdUntil=now+8100;writeHallPanel()}
+      else{state.holdUntil=now+(state.current===0||state.current===2?3500:2100);writePanel(state.current)}
+      render();
+    }
+    function writeHallPanel(){
+      $('readoutTitle').textContent='Estación 04 · Rodamiento';
+      $('readoutDescription').textContent=state.hallStatus==='detected'?'El Hall contó vueltas. La desaceleración simulada no mostró una alerta de fricción.':state.hallStatus==='failed'?'La rueda perdió velocidad demasiado rápido. Posible fricción elevada; esto no confirma un rodamiento dañado.':state.hallStatus==='missed'?'No se registraron suficientes pulsos. Revisa el imán, su distancia al Hall y el giro de la rueda.':state.wheelMotorOn?'El motor auxiliar impulsa el rodillo. El Hall cuenta pulsos del imán sobre la rueda trasera.':state.wheelSpeed>8?'El motor auxiliar se apagó. La rueda gira libre y el sistema observa cómo disminuyen sus vueltas.':'El servo acerca el rodillo a la rueda. La banda está detenida.';
+      $('readoutValue').textContent=state.hallPulses>=2?Math.round(state.hallPeakRpm)+' RPM':'— RPM';
+      $('readoutBadge').textContent=state.hallStatus==='detected'?'SIN ALERTA':state.hallStatus==='failed'||state.hallStatus==='missed'?'REVISAR':'MIDIENDO';
+      $('readoutStage').textContent='SENSOR HALL · D3';
+      $('meterFill').style.width=Math.min(100,state.hallPulses*13)+'%';
+    }
+    function servoPosition(elapsed){
+      const easing=t=>{t=Math.min(1,Math.max(0,t));return t*t*(3-2*t)};
+      if(elapsed<900)return easing(elapsed/900);
+      if(elapsed<2300)return 1;
+      return 1-easing((elapsed-2300)/900);
+    }
+    function wheelStationTick(now,dt){
+      const elapsed=Math.max(0,now-state.testedAt);
+      const easing=t=>{t=Math.min(1,Math.max(0,t));return t*t*(3-2*t)};
+      state.servoHall=elapsed<900?easing(elapsed/900):elapsed<6750?1:1-easing((elapsed-6750)/900);
+      const bad=$('faultBearing').checked;
+      const driveRpm=bad?54:148;
+      state.wheelMotorOn=elapsed>=1000&&elapsed<4450;
+      state.wheelSpeed=state.wheelMotorOn?driveRpm:elapsed<4450?0:driveRpm*Math.exp(-(elapsed-4450)/(bad?230:650));
+      if(elapsed>=6750)state.wheelSpeed=0;
+      if(elapsed>=4450&&!state.hallStopTime&&state.wheelSpeed<8)state.hallStopTime=(elapsed-4450)/1000;
+      const lastAngle=state.wheelAngle;
+      state.wheelAngle+=state.wheelSpeed*Math.PI*2/60*(dt/1000);
+      const previousPulse=Math.floor(lastAngle/(Math.PI*2));
+      const currentPulse=Math.floor(state.wheelAngle/(Math.PI*2));
+      if(!$('faultHall').checked&&currentPulse>previousPulse){
+        for(let pulse=previousPulse;pulse<currentPulse;pulse++){
+          state.hallPulses++;
+          if(state.hallLastPulse>0){state.hallRpm=60000/(now-state.hallLastPulse);state.hallPeakRpm=Math.max(state.hallPeakRpm,state.hallRpm)}
+          state.hallLastPulse=now;
+        }
+      }
+      if(elapsed>=6750&&state.hallStatus==='measuring'){
+        state.hallStatus=state.hallPulses<2?'missed':bad?'failed':'detected';
+        writeHallPanel();render();
+      }else if(state.hallStatus==='measuring'&&state.hallPulses>=2)writeHallPanel();
+    }
+    function tick(now){
+      let dt=state.lastFrame?Math.min(80,now-state.lastFrame):16;state.lastFrame=now;
+      if(state.mode==='moving'){
+        const target=state.target<stages.length?stages[state.target].pos:state.target===3?88:95;
+        state.position=Math.min(target,state.position+(dt/1000)*10.5*state.speed);
+        if(state.position>=target-.05)arrive(now);
+        else $('bike').style.left=`${state.position}%`;
+      } else if(state.mode==='testing'){
+        const elapsed=now-state.testedAt;
+        const servo=state.current===0||state.current===2?servoPosition(elapsed):0;
+        state.servoLight=state.current===0?servo:0;
+        state.servoGas=state.current===2?servo:0;
+        if(state.current===3)wheelStationTick(now,dt);
+        else if(!state.results[state.current]&&elapsed>=(state.current===1?950:1450))evaluate(state.current);
+        if(now>=state.holdUntil){
+          state.servoLight=0;state.servoGas=0;state.servoHall=0;state.wheelMotorOn=false;state.wheelSpeed=0;
+          if(state.manualInspection){state.manualInspection=false;state.mode='manual'}
+          else {state.target=state.current+1;state.mode='moving'}
+          render();
+        }else {updateActuators();if(state.current===3){updateHall();$('factory').classList.toggle('wheel-test',state.wheelSpeed>8);$('factory').classList.toggle('wheel-tool-deployed',state.servoHall>.1);$('systemStatus').textContent=state.wheelMotorOn?'MIDIENDO RPM':'INSPECCIONANDO'}}
+      }
+      updateHall();
+      requestAnimationFrame(tick);
+    }
+    $('startBtn').addEventListener('click',start);
+    $('resetBtn').addEventListener('click',reset);
+    $('pauseBtn').addEventListener('click',()=>{
+      if(state.mode==='paused'){
+        state.mode=state.pausedFrom?.mode||'moving';
+        const elapsed=performance.now()-(state.pausedFrom?.at||performance.now());
+        state.testedAt+=elapsed;state.holdUntil+=elapsed;
+      }else if(state.mode==='moving'||state.mode==='testing'){
+        state.pausedFrom={mode:state.mode,at:performance.now()};state.mode='paused';
+      }
+      render();
+    });
+    $('speedRange').addEventListener('input',event=>{state.speed=Number(event.target.value);$('speedLabel').textContent=state.speed.toFixed(2).replace(/0$/,'')+'×'});
+    stepEls.forEach((button,i)=>button.addEventListener('click',()=>{
+      state.target=i;state.current=i;state.position=i===3?88:stages[i].pos;state.manualInspection=true;
+      state.mode='testing';state.servoLight=0;state.servoGas=0;state.servoHall=0;state.wheelMotorOn=false;
+      state.testedAt=performance.now();state.holdUntil=state.testedAt+(i===3?8100:i===1?2100:3500);
+      if(i===3){resetHallTest();writeHallPanel()}else{state.results[i]=null;writePanel(i)}
+      render();
+      document.querySelector('.machine-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }));
+    ['faultLight','faultTemp','faultGas'].forEach((id,i)=>$(id).addEventListener('change',()=>{
+      if(state.mode==='manual'&&state.current===i){evaluate(i)}
+    }));
+    document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+      scene.setView(button.dataset.view);
+      document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));
+    }));
+    document.querySelectorAll('[data-sensor]').forEach(button=>button.addEventListener('click',()=>selectSensor(Number(button.dataset.sensor))));
+    $('wiresBtn').addEventListener('click',()=>{
+      const visible=scene.toggleWires();
+      $('wiresBtn').classList.toggle('wire-active',visible);
+      $('wiresBtn').setAttribute('aria-pressed',String(visible));
+      $('wiresBtn').textContent=visible?'⌁ Cables visibles':'⌁ Mostrar cables';
+    });
+    $('faultHall').addEventListener('change',updateHall);
+    reset();requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
