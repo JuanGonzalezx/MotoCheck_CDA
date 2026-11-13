@@ -319,7 +319,13 @@ $("#form-config").addEventListener("click", async (ev) => {
 $("#btn-leer").addEventListener("click", () => api("/api/leer", { method: "POST" }).catch((e) => { $("#lecturas").textContent = e.message; }));
 
 // ---------- tiempo real ----------
-const socket = io();
+// Si la página se abrió como archivo (sin el puente), no hay Socket.IO ni API.
+if (typeof io === "undefined") {
+  $("#ind-esp32").textContent = "Sin puente: ejecute npm run simular";
+  $("#punto-esp32").className = "punto falla";
+  aviso("El panel debe abrirse desde el puente: cd software/puente && npm run simular → http://localhost:3000", true);
+}
+const socket = typeof io === "undefined" ? { on() {} } : io();
 socket.on("estado", (s) => {
   const primera = !estado;
   estado = s;

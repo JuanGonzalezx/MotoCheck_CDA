@@ -247,3 +247,11 @@ dialog .tabla-tarjeta { box-shadow: none; }
 /* Evita que el texto largo de los eventos ensanche la rejilla */
 .dos-columnas > *, .estaciones > * { min-width: 0; }
 .eventos span { overflow-wrap: anywhere; }
+.miga, .chip-fase, .usuario { white-space: nowrap; }
+.miga { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.superior { gap: 1rem; }
+@media (max-width: 1100px) {
+  .usuario { display: none; }
+  .superior { padding: 0 1.2rem; }
+  .contenido { padding: 1.6rem 1.4rem 2.4rem; }
+}
