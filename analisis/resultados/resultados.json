@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "generado": "2026-11-13T17:45:19.753Z",
+    "ruta": null,
+    "n_inspecciones": 0,
+    "origenes": [],
+    "advertencia_simulado": false
+  },
+  "resultados": {
+    "p1": {
+      "criterio": "Error medio absoluto ≤ 5 mm",
+      "disponible": false
+    },
+    "p2": {
+      "criterio": "R² ≥ 0,90",
+      "disponible": false
+    },
+    "p3": {
+      "criterio": "CV ≤ 5 %",
+      "disponible": false
+    },
+    "p4": {
+      "criterio": "Error absoluto ≤ 1 °C",
+      "disponible": false
+    },
+    "p5": {
+      "criterio": "Detección (relación ≥ 1,5) en el 100 % de los casos",
+      "disponible": false
+    },
+    "p6": {
+      "criterio": "Error medio absoluto ≤ 3 %; CV ≤ 10 %",
+      "disponible": false
+    },
+    "p7": {
+      "criterio": "Exactitud ≥ 90 %; error tipo II ≤ 5 %",
+      "disponible": false
+    },
+    "p8": {
+      "criterio": "≥ 95 % de ciclos sin error",
+      "disponible": false
+    },
+    "p9": {
+      "criterio": "Parada segura en el 100 % de las fallas",
+      "disponible": false
+    }
+  }
+}

@@ -27,6 +27,7 @@ MotoCheck_CDA/
 │   ├── puente/          Node.js: puerto serial → MongoDB Atlas → Socket.IO (con simulador)
 │   └── web/             Panel web: en vivo, historial, estadísticas, configuración, certificado
 ├── hardware/            Pines, lista de materiales, construcción de la banda
+├── analisis/           Plantillas de mediciones, analizar.mjs (P1–P9) y resultados
 ├── docs/specs/          Contratos: firmware, protocolo serial, puente/API, datos
 ├── docs/bitacora.md     Registro de pruebas en la maqueta (evidencia para la Fase 2)
 └── referencias/         Bibliografía (.bib y APA)

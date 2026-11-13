@@ -132,7 +132,7 @@ function aplicarFase(fase, estacion) {
   chip.className = `chip-fase ${EN_PROCESO.includes(fase) ? "proceso" : fase === "ERROR" ? "falla" : fase === "ESPERA" || fase === "FIN" ? "ok" : ""}`;
   if (["AVANZANDO", "DESPLEGANDO", "MIDIENDO", "RETIRANDO"].includes(fase) && estacion) {
     const s = estaciones[estacion - 1];
-    if (!["ok", "falla"].includes(s.clase)) estaciones[estacion - 1] = { ...s, clase: "proceso", chip: FASES[fase] };
+    if (!["ok", "falla"].includes(s.clase)) estaciones[estacion - 1] = { ...s, clase: "proceso", chip: FASES[fase], criterio: "Prueba en curso" };
   }
   const libre = ["ESPERA", "FIN", "ERROR"].includes(fase);
   $("#btn-iniciar").disabled = !libre || !estado?.conexion?.conectado;
