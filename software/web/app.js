@@ -2,8 +2,15 @@
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const num = (v, d = 0) => (Number.isFinite(v) ? v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—");
-const fecha = (f) => new Date(f).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "medium" });
+const fecha = (f) => new Date(f).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" });
+const hoyISO = () => new Date().toISOString().slice(0, 10);
 
+const ICONOS = {
+  luz: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  temp: '<svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 10-4 0v9.8a4 4 0 104 0z"/><path d="M12 9v7"/></svg>',
+  gas: '<svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 10-3-3M3 12h15a3 3 0 11-3 3M3 16h7"/></svg>',
+  rpm: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M12 14v7M3 12h7M14 12h7"/></svg>',
+};
 const ESTACIONES = [
   { tipo: "luz", nombre: "Faro", sensor: "Fotocelda LDR" },
   { tipo: "temp", nombre: "Temperatura", sensor: "DS18B20" },
@@ -11,9 +18,16 @@ const ESTACIONES = [
   { tipo: "rpm", nombre: "Rueda", sensor: "Hall + rodillo" },
 ];
 const FASES = {
-  CALENTANDO: "Calentando el sensor de gases", ESPERA: "Lista para inspeccionar", AVANZANDO: "Banda avanzando",
+  CALENTANDO: "Calentando sensor de gases", ESPERA: "Lista para inspeccionar", AVANZANDO: "Banda avanzando",
   DESPLEGANDO: "Desplegando brazo", MIDIENDO: "Midiendo", RETIRANDO: "Retirando brazo",
   SALIENDO: "Moto saliendo", FIN: "Inspección terminada", ERROR: "Error en la línea",
+};
+const EN_PROCESO = ["AVANZANDO", "DESPLEGANDO", "MIDIENDO", "RETIRANDO", "SALIENDO"];
+const VISTAS = {
+  vivo: { grupo: "Operación", titulo: "Inspección en vivo", descripcion: "Registra la placa, inicia la línea y sigue cada estación en tiempo real." },
+  historial: { grupo: "Operación", titulo: "Historial", descripcion: "Consulta las inspecciones guardadas, abre su reporte y descarga los datos para el artículo." },
+  estadisticas: { grupo: "Análisis", titulo: "Estadísticas", descripcion: "Tasa de aprobación, tiempo de ciclo y repetibilidad de cada prueba (media, desviación y CV)." },
+  config: { grupo: "Configuración", titulo: "Umbrales y sensores", descripcion: "Ajusta los criterios de cada prueba, los ángulos de los servos y la velocidad de los motores." },
 };
 const ETIQUETAS_CFG = {
   luz_min: "Faro: contraste mínimo (mV)", temp_min: "Temperatura mínima (°C)", temp_max: "Temperatura máxima (°C)",
@@ -24,14 +38,14 @@ const ETIQUETAS_CFG = {
 const FALLAS = { faro: "Faro débil", temp: "Motor recalentado", gas: "Gases altos", rueda: "Rueda frenada", atasco: "Atasco en la banda (E3)" };
 
 let estado = null;
-let estaciones = ESTACIONES.map(() => ({ clase: "", chip: "Pendiente", valor: "—", criterio: "" }));
+let estaciones = [];
 
-// ---------- utilidades de pruebas ----------
+// ---------- utilidades ----------
 function describirPrueba(p, cfg = {}) {
   switch (p.tipo) {
-    case "luz": return { valor: `${num(p.valor - p.base)} mV`, criterio: `contraste ≥ ${num(p.min)} mV (base ${num(p.base)})` };
-    case "temp": return { valor: p.valor <= -999 ? "sin sensor" : `${num(p.valor, 1)} °C`, criterio: `entre ${num(p.min)} y ${num(p.max)} °C` };
-    case "gas": return { valor: `×${num(p.valor, 2)}`, criterio: `≤ ×${num(p.max, 2)} la línea base (${num(p.base_mv)} mV)` };
+    case "luz": return { valor: `${num(p.valor - p.base)} mV`, criterio: `Contraste ≥ ${num(p.min)} mV · ambiente ${num(p.base)} mV` };
+    case "temp": return { valor: p.valor <= -999 ? "Sin sensor" : `${num(p.valor, 1)} °C`, criterio: `Entre ${num(p.min)} y ${num(p.max)} °C` };
+    case "gas": return { valor: `×${num(p.valor, 2)}`, criterio: `≤ ×${num(p.max, 2)} de la línea base (${num(p.base_mv)} mV)` };
     case "rpm": return { valor: `${num(p.valor)} RPM`, criterio: `${num(p.min)}–${num(p.max)} RPM · CV ${num(p.cv, 1)} % (≤ ${num(cfg.cv_max ?? 10)} %) · inercia ${num(p.inercia_ms)} ms` };
     default: return { valor: String(p.valor), criterio: "" };
   }
@@ -55,22 +69,47 @@ function aviso(texto, error = false) {
   m.classList.toggle("error", error);
 }
 
-// ---------- pestañas ----------
-document.querySelectorAll(".pestanas button").forEach((b) => b.addEventListener("click", () => {
-  document.querySelectorAll(".pestanas button").forEach((x) => x.classList.toggle("activa", x === b));
-  document.querySelectorAll(".vista").forEach((v) => v.classList.toggle("activa", v.id === `vista-${b.dataset.vista}`));
-  if (b.dataset.vista === "historial") cargarHistorial();
-  if (b.dataset.vista === "estadisticas") cargarEstadisticas();
-  if (b.dataset.vista === "config") cargarConfig();
-}));
+const esqueleto = (columnas, filas = 5) =>
+  Array.from({ length: filas }, () => `<tr class="esqueleto">${"<td><span></span></td>".repeat(columnas)}</tr>`).join("");
+
+// ---------- navegación ----------
+function irA(vista) {
+  document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("activa", b.dataset.vista === vista));
+  document.querySelectorAll(".vista").forEach((v) => v.classList.toggle("activa", v.id === `vista-${vista}`));
+  const v = VISTAS[vista];
+  $("#miga").innerHTML = `${esc(v.grupo)} / <b>${esc(v.titulo)}</b>`;
+  $("#titulo").textContent = v.titulo;
+  $("#descripcion").textContent = v.descripcion;
+  const acciones = $("#acciones-encabezado");
+  acciones.innerHTML = "";
+  if (vista === "historial") {
+    acciones.innerHTML = `<button class="boton" id="btn-csv"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar CSV</button>`;
+    $("#btn-csv").addEventListener("click", descargarCsv);
+    cargarHistorial();
+  }
+  if (vista === "estadisticas") {
+    acciones.innerHTML = `<button class="boton" id="btn-actualizar"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>`;
+    $("#btn-actualizar").addEventListener("click", cargarEstadisticas);
+    cargarEstadisticas();
+  }
+  if (vista === "config") cargarConfig();
+}
+document.querySelectorAll(".nav-item").forEach((b) => b.addEventListener("click", () => irA(b.dataset.vista)));
 
 // ---------- en vivo ----------
+function reiniciarEstaciones() {
+  estaciones = ESTACIONES.map(() => ({ clase: "", chip: "Pendiente", valor: "—", criterio: "Esperando la moto" }));
+}
+
 function pintarEstaciones() {
+  $("#progreso").innerHTML = estaciones.map((s) => `<div class="paso ${s.clase}"></div>`).join("");
   $("#estaciones").innerHTML = ESTACIONES.map((e, i) => {
     const s = estaciones[i];
     return `<article class="estacion ${s.clase}">
-      <span class="num">ESTACIÓN ${i + 1} · ${esc(e.sensor)}</span>
-      <span class="nombre">${esc(e.nombre)}</span>
+      <div class="estacion-cabeza">
+        <span class="icono">${ICONOS[e.tipo]}</span>
+        <div><span class="num">Estación ${i + 1} · ${esc(e.sensor)}</span><div class="nombre">${esc(e.nombre)}</div></div>
+      </div>
       <span class="chip">${esc(s.chip)}</span>
       <span class="valor">${esc(s.valor)}</span>
       <span class="criterio">${esc(s.criterio)}</span>
@@ -78,25 +117,22 @@ function pintarEstaciones() {
   }).join("");
 }
 
-function reiniciarEstaciones() {
-  estaciones = ESTACIONES.map(() => ({ clase: "", chip: "Pendiente", valor: "—", criterio: "" }));
-}
-
 function aplicarPrueba(p) {
   const i = ESTACIONES.findIndex((e) => e.tipo === p.tipo);
   if (i < 0) return;
-  const d = describirPrueba(p, estado?.config ?? {});
-  estaciones[i] = { clase: p.ok ? "ok" : "falla", chip: p.ok ? "Pasa" : "No pasa", ...d };
+  estaciones[i] = { clase: p.ok ? "ok" : "falla", chip: p.ok ? "Pasa" : "No pasa", ...describirPrueba(p, estado?.config ?? {}) };
 }
 
 function aplicarFase(fase, estacion) {
-  $("#fase").textContent = FASES[fase] ?? fase ?? "—";
-  $("#fase-detalle").textContent = estacion && !["ESPERA", "CALENTANDO"].includes(fase) ? `Estación ${estacion}` : "";
+  const texto = FASES[fase] ?? fase ?? "—";
+  $("#fase").textContent = texto;
+  $("#fase-detalle").textContent = estacion && EN_PROCESO.includes(fase) ? `· estación ${estacion}` : "";
+  const chip = $("#chip-fase");
+  chip.textContent = texto;
+  chip.className = `chip-fase ${EN_PROCESO.includes(fase) ? "proceso" : fase === "ERROR" ? "falla" : fase === "ESPERA" || fase === "FIN" ? "ok" : ""}`;
   if (["AVANZANDO", "DESPLEGANDO", "MIDIENDO", "RETIRANDO"].includes(fase) && estacion) {
     const s = estaciones[estacion - 1];
-    if (!["ok", "falla"].includes(s.clase)) {
-      estaciones[estacion - 1] = { ...s, clase: "activa", chip: FASES[fase] };
-    }
+    if (!["ok", "falla"].includes(s.clase)) estaciones[estacion - 1] = { ...s, clase: "proceso", chip: FASES[fase] };
   }
   const libre = ["ESPERA", "FIN", "ERROR"].includes(fase);
   $("#btn-iniciar").disabled = !libre || !estado?.conexion?.conectado;
@@ -104,16 +140,14 @@ function aplicarFase(fase, estacion) {
 
 function pintarIndicadores() {
   const c = estado?.conexion, a = estado?.almacen;
-  const e32 = $("#ind-esp32");
-  e32.textContent = c?.modo === "simulado" ? "ESP32 simulado" : c?.conectado ? `ESP32 ${c.descripcion}` : "ESP32 desconectado";
-  e32.className = `pastilla ${c?.conectado ? (c.modo === "simulado" ? "aviso" : "ok") : "falla"}`;
-  const nube = $("#ind-nube");
+  $("#ind-esp32").textContent = c?.modo === "simulado" ? "ESP32 simulado" : c?.conectado ? `ESP32 · ${c.descripcion}` : "ESP32 desconectado";
+  $("#punto-esp32").className = `punto ${c?.conectado ? (c.modo === "simulado" ? "aviso" : "ok") : "falla"}`;
   if (a?.tipo === "mongodb") {
-    nube.textContent = a.conectado ? `MongoDB Atlas${a.pendientes ? ` · ${a.pendientes} pendientes` : ""}` : "Atlas sin conexión (guardando local)";
-    nube.className = `pastilla ${a.conectado ? "ok" : "falla"}`;
+    $("#ind-nube").textContent = a.conectado ? `MongoDB Atlas${a.pendientes ? ` · ${a.pendientes} pendientes` : ""}` : "Atlas sin conexión (guardando local)";
+    $("#punto-nube").className = `punto ${a.conectado ? "ok" : "falla"}`;
   } else {
-    nube.textContent = "Datos en archivo local";
-    nube.className = "pastilla aviso";
+    $("#ind-nube").textContent = "Datos en archivo local";
+    $("#punto-nube").className = "punto aviso";
   }
 }
 
@@ -131,10 +165,10 @@ $("#fallas").addEventListener("change", (ev) => {
 
 function mostrarResultado(doc) {
   const r = $("#resultado");
-  const textos = { aprobada: "APROBADA", rechazada: "RECHAZADA", error: "ERROR EN LA LÍNEA", detenida: "DETENIDA" };
+  const textos = { aprobada: "Aprobada", rechazada: "Rechazada", error: "Error en la línea", detenida: "Detenida" };
   r.className = `resultado ${doc.resultado}`;
   r.innerHTML = `<span>${esc(doc.placa)} · ${textos[doc.resultado]}${doc.motivo ? ` — ${esc(doc.motivo)}` : ""} · ${num(doc.duracion_ms / 1000, 1)} s</span>
-    <button data-id="${esc(doc.id)}">Ver certificado</button>`;
+    <button class="boton">Ver reporte</button>`;
   r.querySelector("button").addEventListener("click", () => abrirCertificado(doc.id));
 }
 
@@ -161,25 +195,44 @@ $("#btn-detener").addEventListener("click", async () => {
 // ---------- historial ----------
 let historial = [];
 async function cargarHistorial() {
-  historial = await api(`/api/inspecciones?limite=500&placa=${encodeURIComponent($("#buscar").value)}`);
+  $("#tabla-historial").innerHTML = esqueleto(8);
+  historial = await api(`/api/inspecciones?limite=1000&placa=${encodeURIComponent($("#buscar").value)}`);
+  pintarHistorial();
+}
+
+function filtrarHistorial() {
+  const res = $("#filtro-resultado").value, desde = $("#desde").value, hasta = $("#hasta").value;
+  return historial.filter((d) => {
+    const dia = new Date(d.inicio).toLocaleDateString("en-CA");  // AAAA-MM-DD en hora local
+    return (!res || d.resultado === res) && (!desde || dia >= desde) && (!hasta || dia <= hasta);
+  });
+}
+
+function pintarHistorial() {
   const celda = (d, tipo) => {
     const p = d.pruebas.find((x) => x.tipo === tipo);
     if (!p) return "<td>—</td>";
     return `<td class="${p.ok ? "marca-ok" : "marca-falla"}">${esc(describirPrueba(p, d.config ?? {}).valor)}</td>`;
   };
-  $("#tabla-historial").innerHTML = historial.map((d) => `<tr data-id="${esc(d.id)}">
-    <td>${fecha(d.inicio)}</td><td><b>${esc(d.placa)}</b></td>
+  const filas = filtrarHistorial();
+  $("#tabla-historial").innerHTML = filas.map((d) => `<tr data-id="${esc(d.id)}">
+    <td>${fecha(d.inicio)}</td><td class="placa">${esc(d.placa)}</td>
     <td><span class="insignia ${d.resultado}">${esc(d.resultado)}</span></td>
     ${celda(d, "luz")}${celda(d, "temp")}${celda(d, "gas")}${celda(d, "rpm")}
-    <td>${num(d.duracion_ms / 1000, 1)} s</td></tr>`).join("") || `<tr><td colspan="8" class="sutil">Aún no hay inspecciones.</td></tr>`;
+    <td>${num(d.duracion_ms / 1000, 1)} s</td></tr>`).join("")
+    || `<tr><td colspan="8" class="vacio">No hay inspecciones con estos filtros.</td></tr>`;
 }
-$("#buscar").addEventListener("input", () => cargarHistorial());
+
+let temporizadorBusqueda;
+$("#buscar").addEventListener("input", () => { clearTimeout(temporizadorBusqueda); temporizadorBusqueda = setTimeout(cargarHistorial, 250); });
+["#filtro-resultado", "#desde", "#hasta"].forEach((s) => $(s).addEventListener("change", pintarHistorial));
+$("#btn-todas").addEventListener("click", () => { $("#desde").value = ""; $("#hasta").value = ""; pintarHistorial(); });
 $("#tabla-historial").addEventListener("click", (ev) => {
   const tr = ev.target.closest("tr[data-id]");
   if (tr) abrirCertificado(tr.dataset.id);
 });
 
-$("#btn-csv").addEventListener("click", async () => {
+async function descargarCsv() {
   const docs = await api("/api/inspecciones?limite=1000");
   const n = (v) => (Number.isFinite(v) ? String(v).replace(".", ",") : "");
   const cab = ["id", "placa", "resultado", "inicio", "duracion_s", "luz_mv", "luz_base_mv", "luz_ok", "temp_c", "temp_ok",
@@ -192,50 +245,52 @@ $("#btn-csv").addEventListener("click", async () => {
       d.motivo ?? "", d.origen, d.firmware ?? ""].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";");
   });
   const blob = new Blob(["﻿" + [cab.join(";"), ...filas].join("\r\n")], { type: "text/csv;charset=utf-8" });
-  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `motocheck_inspecciones_${new Date().toISOString().slice(0, 10)}.csv` });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `motocheck_inspecciones_${hoyISO()}.csv` });
   a.click();
   URL.revokeObjectURL(a.href);
-});
+}
 
-// ---------- certificado ----------
+// ---------- reporte ----------
 async function abrirCertificado(id) {
   const d = await api(`/api/inspecciones/${encodeURIComponent(id)}`);
-  const titulo = { aprobada: "APROBADA", rechazada: "RECHAZADA", error: "NO CONCLUIDA (error)", detenida: "NO CONCLUIDA (detenida)" }[d.resultado];
+  const titulo = { aprobada: "Aprobada", rechazada: "Rechazada", error: "No concluida (error)", detenida: "No concluida (detenida)" }[d.resultado];
   $("#certificado").innerHTML = `
     <div class="cert-cabeza">
       <div><h2>Reporte de preinspección</h2><p class="sutil">MotoCheck Lab · Universidad de Caldas</p>
         <p class="sutil">${fecha(d.inicio)} · ${num(d.duracion_ms / 1000, 1)} s · origen ${esc(d.origen)} · firmware ${esc(d.firmware ?? "—")}</p></div>
       <span class="cert-placa">${esc(d.placa)}</span>
     </div>
-    <p class="resultado ${d.resultado}">Resultado: ${titulo}${d.motivo ? ` — ${esc(d.motivo)}` : ""}</p>
-    <table class="tabla"><thead><tr><th>Estación</th><th>Medida</th><th>Criterio</th><th>Resultado</th></tr></thead><tbody>
+    <div class="resultado ${d.resultado}">Resultado: ${titulo}${d.motivo ? ` — ${esc(d.motivo)}` : ""}</div>
+    <div class="tabla-tarjeta"><table class="tabla"><thead><tr><th>Estación</th><th>Medida</th><th>Criterio</th><th>Resultado</th></tr></thead><tbody>
     ${ESTACIONES.map((e) => {
       const p = d.pruebas.find((x) => x.tipo === e.tipo);
       if (!p) return `<tr><td>${esc(e.nombre)}</td><td>—</td><td>—</td><td>No evaluada</td></tr>`;
       const t = describirPrueba(p, d.config ?? {});
-      return `<tr><td>${esc(e.nombre)}</td><td>${esc(t.valor)}</td><td>${esc(t.criterio)}</td><td class="${p.ok ? "marca-ok" : "marca-falla"}">${p.ok ? "Pasa" : "No pasa"}</td></tr>`;
-    }).join("")}</tbody></table>
+      return `<tr><td>${esc(e.nombre)}</td><td>${esc(t.valor)}</td><td style="white-space:normal">${esc(t.criterio)}</td><td class="${p.ok ? "marca-ok" : "marca-falla"}">${p.ok ? "Pasa" : "No pasa"}</td></tr>`;
+    }).join("")}</tbody></table></div>
     <p class="cert-aviso">Prototipo académico. Resultado indicativo con umbrales experimentales; no reemplaza la Revisión Técnico-Mecánica y de Emisiones Contaminantes, que solo realizan los CDA acreditados por ONAC.</p>`;
   $("#dialogo-certificado").showModal();
 }
 
 // ---------- estadísticas ----------
 async function cargarEstadisticas() {
+  $("#tabla-pruebas").innerHTML = esqueleto(7, 4);
   const e = await api("/api/estadisticas");
-  const kpi = (t, v) => `<div class="kpi"><span>${t}</span><strong>${v}</strong></div>`;
+  const kpi = (t, v, destacado = false) => `<div class="kpi ${destacado ? "destacado" : ""}"><span>${t}</span><strong>${v}</strong></div>`;
   $("#kpis").innerHTML = [
     kpi("Inspecciones", num(e.total)),
-    kpi("Tasa de aprobación", e.tasa_aprobacion == null ? "—" : `${num(e.tasa_aprobacion * 100, 1)} %`),
+    kpi("Tasa de aprobación", e.tasa_aprobacion == null ? "—" : `${num(e.tasa_aprobacion * 100, 1)} %`, true),
     kpi("Tiempo de ciclo medio", e.duracion_media_ms == null ? "—" : `${num(e.duracion_media_ms / 1000, 1)} s`),
     kpi("Rechazadas", num(e.rechazadas)),
     kpi("Errores / detenidas", `${num(e.errores)} / ${num(e.detenidas)}`),
   ].join("");
   const dec = { luz: 0, temp: 2, gas: 2, rpm: 1 };
+  const unidad = { luz: " mV", temp: " °C", gas: "", rpm: " RPM" };
   $("#tabla-pruebas").innerHTML = ESTACIONES.map(({ tipo, nombre }) => {
     const p = e.por_prueba[tipo];
     if (!p) return `<tr><td>${nombre}</td><td colspan="6" class="sutil">Sin datos</td></tr>`;
-    return `<tr><td>${nombre}</td><td>${num(p.total)}</td><td>${num(p.fallas)}</td><td>${num((100 * p.fallas) / p.total, 1)} %</td>
-      <td>${num(p.media, dec[tipo])}</td><td>${num(p.desviacion, dec[tipo])}</td><td>${num(p.cv_pct, 1)} %</td></tr>`;
+    return `<tr><td><b>${nombre}</b></td><td>${num(p.total)}</td><td>${num(p.fallas)}</td><td>${num((100 * p.fallas) / p.total, 1)} %</td>
+      <td>${num(p.media, dec[tipo])}${unidad[tipo]}</td><td>${num(p.desviacion, dec[tipo])}</td><td>${num(p.cv_pct, 1)} %</td></tr>`;
   }).join("");
 }
 
@@ -245,20 +300,20 @@ async function cargarConfig() {
   $("#form-config").innerHTML = Object.entries(c.claves).map(([k, def]) => {
     const v = c.guardada[k] ?? c.dispositivo?.[k] ?? def.defecto;
     return `<div class="campo"><label for="cfg-${k}">${esc(ETIQUETAS_CFG[k] ?? k)}</label>
-      <div class="en-linea"><input id="cfg-${k}" type="number" step="any" min="${def.min}" max="${def.max}" value="${esc(v)}" data-clave="${k}" data-original="${esc(v)}">
-      <button type="button" data-guardar="${k}">Guardar</button></div></div>`;
+      <div class="fila-input"><input id="cfg-${k}" type="number" step="any" min="${def.min}" max="${def.max}" value="${esc(v)}">
+      <button type="button" class="boton" data-guardar="${k}">Guardar</button></div></div>`;
   }).join("");
   api("/api/puertos").then((p) => { $("#puertos").textContent = p.map((x) => `${x.ruta}  ${x.fabricante}`).join("\n") || "Ninguno"; })
     .catch((e) => { $("#puertos").textContent = e.message; });
 }
 $("#form-config").addEventListener("click", async (ev) => {
-  const k = ev.target.dataset.guardar;
-  if (!k) return;
-  const input = $(`#cfg-${k}`);
+  const boton = ev.target.closest("[data-guardar]");
+  if (!boton) return;
+  const k = boton.dataset.guardar;
   try {
-    await api("/api/config", { method: "POST", body: { clave: k, valor: input.value } });
-    ev.target.textContent = "✓";
-    setTimeout(() => { ev.target.textContent = "Guardar"; }, 1200);
+    await api("/api/config", { method: "POST", body: { clave: k, valor: $(`#cfg-${k}`).value } });
+    boton.textContent = "✓ Guardado";
+    setTimeout(() => { boton.textContent = "Guardar"; }, 1400);
   } catch (e) { alert(e.message); }
 });
 $("#btn-leer").addEventListener("click", () => api("/api/leer", { method: "POST" }).catch((e) => { $("#lecturas").textContent = e.message; }));
@@ -296,7 +351,9 @@ socket.on("inspeccion", (doc) => {
 });
 socket.on("disconnect", () => {
   $("#ind-esp32").textContent = "Puente desconectado";
-  $("#ind-esp32").className = "pastilla falla";
+  $("#punto-esp32").className = "punto falla";
 });
 
+reiniciarEstaciones();
 pintarEstaciones();
+irA("vivo");

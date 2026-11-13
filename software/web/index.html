@@ -7,116 +7,180 @@
   <link rel="stylesheet" href="/estilos.css">
 </head>
 <body>
-  <header class="barra">
-    <div class="marca"><span class="logo">MC</span><div><strong>MotoCheck Lab</strong><small>Preinspección automatizada</small></div></div>
-    <nav class="pestanas" role="tablist">
-      <button data-vista="vivo" class="activa">En vivo</button>
-      <button data-vista="historial">Historial</button>
-      <button data-vista="estadisticas">Estadísticas</button>
-      <button data-vista="config">Configuración</button>
-    </nav>
-    <div class="indicadores">
-      <span id="ind-esp32" class="pastilla">ESP32 …</span>
-      <span id="ind-nube" class="pastilla">Datos …</span>
-    </div>
-  </header>
+  <div class="app">
+    <!-- BARRA LATERAL -->
+    <aside class="lateral">
+      <div class="marca">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28"><circle cx="8" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 22l6-9h6l4 9M14 13l-2-4h-3M20 13l2-4h3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <strong>MotoCheck Lab</strong>
+          <small>Universidad de Caldas</small>
+        </div>
+      </div>
 
-  <main>
-    <!-- EN VIVO -->
-    <section id="vista-vivo" class="vista activa">
-      <div class="fila">
-        <form id="form-inicio" class="tarjeta control">
-          <label for="placa">Placa de la moto</label>
-          <div class="en-linea">
-            <input id="placa" name="placa" maxlength="10" placeholder="ABC12D" autocomplete="off" required>
-            <button type="submit" class="primario" id="btn-iniciar">Iniciar inspección</button>
-            <button type="button" class="peligro" id="btn-detener">Detener</button>
+      <nav class="menu">
+        <div class="grupo">
+          <span class="grupo-titulo">
+            <svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM6 6h2v2h8V6h2a1 1 0 011 1v13a1 1 0 01-1 1H6a1 1 0 01-1-1V7a1 1 0 011-1zm3 8l2 2 4-4"/></svg>
+            Operación
+          </span>
+          <button class="nav-item activa" data-vista="vivo">Inspección en vivo</button>
+          <button class="nav-item" data-vista="historial">Historial</button>
+        </div>
+        <div class="grupo">
+          <span class="grupo-titulo">
+            <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            Análisis
+          </span>
+          <button class="nav-item" data-vista="estadisticas">Estadísticas</button>
+        </div>
+        <div class="grupo">
+          <span class="grupo-titulo">
+            <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            Configuración
+          </span>
+          <button class="nav-item" data-vista="config">Umbrales y sensores</button>
+        </div>
+      </nav>
+
+      <div class="lateral-pie">
+        <div class="conexion"><span id="punto-esp32" class="punto"></span><span id="ind-esp32">ESP32 …</span></div>
+        <div class="conexion"><span id="punto-nube" class="punto"></span><span id="ind-nube">Datos …</span></div>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <div class="principal">
+      <header class="superior">
+        <span id="miga" class="miga">Operación</span>
+        <div class="superior-acciones">
+          <span id="chip-fase" class="chip-fase">—</span>
+          <button class="boton boton-peligro" id="btn-detener" title="Detiene la banda y retira los brazos">
+            <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            Detener línea
+          </button>
+          <span class="usuario">PANEL · OPERADOR</span>
+        </div>
+      </header>
+
+      <main class="contenido">
+        <div class="encabezado">
+          <div>
+            <h1 id="titulo">Inspección en vivo</h1>
+            <p id="descripcion">Registra la placa, inicia la línea y sigue cada estación en tiempo real.</p>
           </div>
+          <div id="acciones-encabezado"></div>
+        </div>
+
+        <!-- EN VIVO -->
+        <section id="vista-vivo" class="vista activa">
+          <form id="form-inicio" class="filtros">
+            <div class="campo">
+              <label for="placa">Placa de la moto</label>
+              <input id="placa" name="placa" maxlength="10" placeholder="ABC12D" autocomplete="off" required>
+            </div>
+            <div class="campo campo-estado">
+              <label>Estado de la línea</label>
+              <div class="estado-linea"><strong id="fase">—</strong><span id="fase-detalle"></span></div>
+            </div>
+            <button type="submit" class="boton boton-primario" id="btn-iniciar">
+              <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+              Iniciar inspección
+            </button>
+          </form>
           <p id="mensaje" class="mensaje" role="status"></p>
-        </form>
-        <div class="tarjeta fase">
-          <span class="etiqueta">Estado de la línea</span>
-          <strong id="fase">—</strong>
-          <span id="fase-detalle" class="sutil"></span>
-        </div>
-      </div>
 
-      <div class="linea" id="estaciones"></div>
+          <div class="progreso" id="progreso"></div>
+          <div class="estaciones" id="estaciones"></div>
+          <div id="resultado" class="resultado oculto"></div>
 
-      <div id="resultado" class="resultado oculto"></div>
-
-      <div class="fila">
-        <div class="tarjeta crece">
-          <h3>Eventos del ESP32</h3>
-          <ol id="eventos" class="eventos"></ol>
-        </div>
-        <div class="tarjeta" id="panel-fallas" hidden>
-          <h3>Simulador: fallas</h3>
-          <p class="sutil">Actívelas antes de iniciar para probar el rechazo.</p>
-          <div id="fallas"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- HISTORIAL -->
-    <section id="vista-historial" class="vista">
-      <div class="tarjeta">
-        <div class="en-linea entre">
-          <h3>Inspecciones</h3>
-          <div class="en-linea">
-            <input id="buscar" placeholder="Buscar placa">
-            <button id="btn-csv">Descargar CSV</button>
+          <div class="dos-columnas">
+            <div class="tarjeta">
+              <div class="tarjeta-cabeza"><h2>Eventos del ESP32</h2><span class="sutil">últimos 60</span></div>
+              <ol id="eventos" class="eventos"></ol>
+            </div>
+            <div class="tarjeta" id="panel-fallas" hidden>
+              <div class="tarjeta-cabeza"><h2>Simulador</h2><span class="etiqueta-sim">sin hardware</span></div>
+              <p class="sutil">Activa una falla antes de iniciar para probar el rechazo.</p>
+              <div id="fallas"></div>
+            </div>
           </div>
-        </div>
-        <div class="tabla-scroll">
-          <table class="tabla">
-            <thead><tr><th>Fecha</th><th>Placa</th><th>Resultado</th><th>Faro</th><th>Temp.</th><th>Gases</th><th>Rueda</th><th>Duración</th></tr></thead>
-            <tbody id="tabla-historial"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <!-- ESTADÍSTICAS -->
-    <section id="vista-estadisticas" class="vista">
-      <div class="kpis" id="kpis"></div>
-      <div class="tarjeta">
-        <h3>Desempeño por prueba</h3>
-        <p class="sutil">Media, desviación estándar y coeficiente de variación de los valores medidos (para la sección de Resultados del artículo).</p>
-        <div class="tabla-scroll">
-          <table class="tabla">
-            <thead><tr><th>Prueba</th><th>n</th><th>Fallas</th><th>% falla</th><th>Media</th><th>DE</th><th>CV</th></tr></thead>
-            <tbody id="tabla-pruebas"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <!-- HISTORIAL -->
+        <section id="vista-historial" class="vista">
+          <div class="filtros">
+            <div class="campo crece">
+              <label for="buscar">Buscar placa</label>
+              <input id="buscar" placeholder="ABC12D">
+            </div>
+            <div class="campo">
+              <label for="filtro-resultado">Resultado</label>
+              <select id="filtro-resultado">
+                <option value="">Todos</option>
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+                <option value="error">Error</option>
+                <option value="detenida">Detenida</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="desde">Desde</label>
+              <input id="desde" type="date">
+            </div>
+            <div class="campo">
+              <label for="hasta">Hasta</label>
+              <input id="hasta" type="date">
+            </div>
+            <button class="boton" id="btn-todas">Ver todas las fechas</button>
+          </div>
+          <div class="tabla-tarjeta">
+            <table class="tabla">
+              <thead><tr><th>Fecha</th><th>Placa</th><th>Resultado</th><th>Faro</th><th>Temp.</th><th>Gases</th><th>Rueda</th><th>Duración</th></tr></thead>
+              <tbody id="tabla-historial"></tbody>
+            </table>
+          </div>
+        </section>
 
-    <!-- CONFIGURACIÓN -->
-    <section id="vista-config" class="vista">
-      <div class="fila">
-        <div class="tarjeta crece">
-          <h3>Umbrales y parámetros</h3>
-          <p class="sutil">Se envían al ESP32 al guardar y se reenvían automáticamente cuando el ESP32 se reinicia.</p>
-          <form id="form-config" class="rejilla-config"></form>
-        </div>
-        <div class="tarjeta">
-          <h3>Lecturas instantáneas</h3>
-          <p class="sutil">Úselas para calibrar: luz ambiente, línea base de gases, sensores IR.</p>
-          <button id="btn-leer">Leer sensores</button>
-          <pre id="lecturas" class="pre">—</pre>
-          <h3>Puertos serie</h3>
-          <pre id="puertos" class="pre">—</pre>
-        </div>
-      </div>
-    </section>
-  </main>
+        <!-- ESTADÍSTICAS -->
+        <section id="vista-estadisticas" class="vista">
+          <div class="kpis" id="kpis"></div>
+          <div class="tabla-tarjeta">
+            <table class="tabla">
+              <thead><tr><th>Prueba</th><th>n</th><th>Fallas</th><th>% falla</th><th>Media</th><th>Desv. estándar</th><th>CV</th></tr></thead>
+              <tbody id="tabla-pruebas"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- CONFIGURACIÓN -->
+        <section id="vista-config" class="vista">
+          <div class="dos-columnas config">
+            <div class="tarjeta">
+              <div class="tarjeta-cabeza"><h2>Umbrales y parámetros</h2></div>
+              <p class="sutil">Se envían al ESP32 al guardar y se reenvían solos cuando el ESP32 se reinicia.</p>
+              <form id="form-config" class="rejilla-config"></form>
+            </div>
+            <div class="tarjeta">
+              <div class="tarjeta-cabeza"><h2>Lecturas instantáneas</h2><button class="boton" id="btn-leer">Leer sensores</button></div>
+              <p class="sutil">Úsalas para calibrar: luz ambiente, línea base de gases y sensores IR.</p>
+              <pre id="lecturas" class="pre">—</pre>
+              <div class="tarjeta-cabeza"><h2>Puertos serie</h2></div>
+              <pre id="puertos" class="pre">—</pre>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <dialog id="dialogo-certificado">
     <div id="certificado"></div>
-    <div class="en-linea derecha no-imprimir">
-      <button onclick="window.print()">Imprimir / PDF</button>
-      <button onclick="this.closest('dialog').close()">Cerrar</button>
+    <div class="dialogo-acciones no-imprimir">
+      <button class="boton" onclick="window.print()">Imprimir / PDF</button>
+      <button class="boton boton-primario" onclick="this.closest('dialog').close()">Cerrar</button>
     </div>
   </dialog>
 
