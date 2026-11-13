@@ -1,0 +1,22 @@
+{
+  "name": "motocheck-puente",
+  "version": "0.2.0",
+  "description": "Puente MotoCheck Lab: puerto serial del ESP32 -> MongoDB Atlas -> panel web en tiempo real",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "simular": "node src/index.js --simular",
+    "puertos": "node src/index.js --puertos",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "^12.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.8.1"
+  }
+}

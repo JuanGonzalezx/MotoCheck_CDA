@@ -6,3 +6,5 @@ build/
 ~$*
 # borradores de render
 entregas/**/_render/
+software/puente/datos/
+.claude/

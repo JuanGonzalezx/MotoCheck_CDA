@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MotoCheck Lab</title>
+  <link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+  <header class="barra">
+    <div class="marca"><span class="logo">MC</span><div><strong>MotoCheck Lab</strong><small>Preinspección automatizada</small></div></div>
+    <nav class="pestanas" role="tablist">
+      <button data-vista="vivo" class="activa">En vivo</button>
+      <button data-vista="historial">Historial</button>
+      <button data-vista="estadisticas">Estadísticas</button>
+      <button data-vista="config">Configuración</button>
+    </nav>
+    <div class="indicadores">
+      <span id="ind-esp32" class="pastilla">ESP32 …</span>
+      <span id="ind-nube" class="pastilla">Datos …</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- EN VIVO -->
+    <section id="vista-vivo" class="vista activa">
+      <div class="fila">
+        <form id="form-inicio" class="tarjeta control">
+          <label for="placa">Placa de la moto</label>
+          <div class="en-linea">
+            <input id="placa" name="placa" maxlength="10" placeholder="ABC12D" autocomplete="off" required>
+            <button type="submit" class="primario" id="btn-iniciar">Iniciar inspección</button>
+            <button type="button" class="peligro" id="btn-detener">Detener</button>
+          </div>
+          <p id="mensaje" class="mensaje" role="status"></p>
+        </form>
+        <div class="tarjeta fase">
+          <span class="etiqueta">Estado de la línea</span>
+          <strong id="fase">—</strong>
+          <span id="fase-detalle" class="sutil"></span>
+        </div>
+      </div>
+
+      <div class="linea" id="estaciones"></div>
+
+      <div id="resultado" class="resultado oculto"></div>
+
+      <div class="fila">
+        <div class="tarjeta crece">
+          <h3>Eventos del ESP32</h3>
+          <ol id="eventos" class="eventos"></ol>
+        </div>
+        <div class="tarjeta" id="panel-fallas" hidden>
+          <h3>Simulador: fallas</h3>
+          <p class="sutil">Actívelas antes de iniciar para probar el rechazo.</p>
+          <div id="fallas"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="vista-historial" class="vista">
+      <div class="tarjeta">
+        <div class="en-linea entre">
+          <h3>Inspecciones</h3>
+          <div class="en-linea">
+            <input id="buscar" placeholder="Buscar placa">
+            <button id="btn-csv">Descargar CSV</button>
+          </div>
+        </div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Fecha</th><th>Placa</th><th>Resultado</th><th>Faro</th><th>Temp.</th><th>Gases</th><th>Rueda</th><th>Duración</th></tr></thead>
+            <tbody id="tabla-historial"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTADÍSTICAS -->
+    <section id="vista-estadisticas" class="vista">
+      <div class="kpis" id="kpis"></div>
+      <div class="tarjeta">
+        <h3>Desempeño por prueba</h3>
+        <p class="sutil">Media, desviación estándar y coeficiente de variación de los valores medidos (para la sección de Resultados del artículo).</p>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Prueba</th><th>n</th><th>Fallas</th><th>% falla</th><th>Media</th><th>DE</th><th>CV</th></tr></thead>
+            <tbody id="tabla-pruebas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIGURACIÓN -->
+    <section id="vista-config" class="vista">
+      <div class="fila">
+        <div class="tarjeta crece">
+          <h3>Umbrales y parámetros</h3>
+          <p class="sutil">Se envían al ESP32 al guardar y se reenvían automáticamente cuando el ESP32 se reinicia.</p>
+          <form id="form-config" class="rejilla-config"></form>
+        </div>
+        <div class="tarjeta">
+          <h3>Lecturas instantáneas</h3>
+          <p class="sutil">Úselas para calibrar: luz ambiente, línea base de gases, sensores IR.</p>
+          <button id="btn-leer">Leer sensores</button>
+          <pre id="lecturas" class="pre">—</pre>
+          <h3>Puertos serie</h3>
+          <pre id="puertos" class="pre">—</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dialogo-certificado">
+    <div id="certificado"></div>
+    <div class="en-linea derecha no-imprimir">
+      <button onclick="window.print()">Imprimir / PDF</button>
+      <button onclick="this.closest('dialog').close()">Cerrar</button>
+    </div>
+  </dialog>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

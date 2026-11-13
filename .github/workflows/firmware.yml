@@ -1,0 +1,26 @@
+# Compila el firmware del ESP32 en cada push o PR que toque firmware/.
+# Usa exactamente las versiones de docs/specs/firmware.md, igual que Arduino IDE.
+name: Compilar firmware ESP32
+
+on:
+  push:
+    paths: ["firmware/**", ".github/workflows/firmware.yml"]
+  pull_request:
+    paths: ["firmware/**"]
+  workflow_dispatch:
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Cache del núcleo ESP32 y librerías
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.arduino15
+            ~/Arduino/libraries
+          key: arduino-esp32-3.3.12-${{ hashFiles('firmware/compilar.sh') }}
+      - name: Instalar dependencias fijadas y compilar
+        run: ./firmware/compilar.sh --instalar

@@ -20,20 +20,16 @@ Autores: Juan Diego Rendón Tabares · Juan David Ocampo González.
 
 ```
 MotoCheck_CDA/
-├── entregas/            Lo que se sube al aula virtual
-│   ├── 00_borrador/     Borrador (7 nov): problema, justificación, marco teórico
-│   ├── 01_fase1/        Fase 1 (13 nov): talleres 1, 2 y 3
-│   ├── 02_fase2/        Fase 2 (20 nov): datos, métodos y resultados, artículo + video
-│   ├── 03_fase3/        Fase 3 (27 nov): artículo final y exposición
-│   └── eaifi/           Resumen e inscripción EAiFi (1–20 nov)
+├── entregas/            Lo que se sube al aula virtual (borrador, fases 1–3, EAiFi)
 ├── simulacion/          Gemelo digital 3D en HTML (aprobado por la profe)
-├── firmware/            Código del ESP32 (máquina de estados)
+├── firmware/            ESP32: motocheck_esp32 (línea), motocheck_diagnostico (pruebas), compilar.sh
 ├── software/
-│   ├── puente/          PC: lee el COM y guarda en MongoDB (Fase 2)
-│   └── web/             Panel web (Fase 2)
+│   ├── puente/          Node.js: puerto serial → MongoDB Atlas → Socket.IO (con simulador)
+│   └── web/             Panel web: en vivo, historial, estadísticas, configuración, certificado
 ├── hardware/            Pines, lista de materiales, construcción de la banda
-├── referencias/         Bibliografía (.bib y APA)
-└── docs/                Protocolo serial y planeación
+├── docs/specs/          Contratos: firmware, protocolo serial, puente/API, datos
+├── docs/bitacora.md     Registro de pruebas en la maqueta (evidencia para la Fase 2)
+└── referencias/         Bibliografía (.bib y APA)
 ```
 
 ## Cronograma
@@ -41,15 +37,21 @@ MotoCheck_CDA/
 | Entrega | Cierre | Contenido |
 |---|---|---|
 | Borrador | sáb 7 nov ✅ | Problema, justificación, 3 títulos, marco teórico (≥15 artículos) |
-| **Fase 1** | **vie 13 nov** | Talleres 1, 2 y 3: objetivos, metodología, recursos, diagramas, lista de materiales, protocolo de pruebas, primer prototipo o simulación |
-| Inscripción EAiFi | 1–20 nov | Resumen (introducción, objetivo, metodología, resultados esperados, 3–5 palabras clave, 5–10 referencias APA) en https://eaifi.org. La hace un solo autor. |
-| Fase 2 | vie 20 nov | Pruebas y datos, secciones de Métodos y Resultados, artículo en borrador + video demo |
+| Fase 1 | vie 13 nov ✅ | Talleres 1, 2 y 3: objetivos, metodología, diagramas, lista de materiales, protocolo, simulación + firmware |
+| Inscripción EAiFi | 1–20 nov | Resumen en https://eaifi.org (un solo autor). Borrador en `entregas/eaifi/` |
+| **Fase 2** | **vie 20 nov** | Pruebas y datos, secciones de Métodos y Resultados, artículo en borrador + video demo |
 | Fase 3 | vie 27 nov | Maqueta lista, exposición EAiFi, artículo final y repositorio |
 
-## Uso rápido del firmware
+## Cómo correr cada parte
 
-1. Arduino IDE → instalar el soporte para placas **esp32** (Espressif) y las librerías **ESP32Servo**, **OneWire** y **DallasTemperature**.
-2. Abrir `firmware/motocheck_esp32/motocheck_esp32.ino`, elegir la placa *ESP32 Dev Module* y cargar.
-3. Abrir el monitor serial a 115200 baudios. Esperar 60 s (precalentamiento del MQ-2) y escribir `START;ABC12D`.
+**Firmware (Arduino IDE).** Instalar el núcleo **esp32 3.3.12** y las librerías **ESP32Servo 3.2.1**, **OneWire 2.3.8** y **DallasTemperature 4.0.6**. Elegir la placa *ESP32 Dev Module*. Todo el detalle y los errores comunes están en [`docs/specs/firmware.md`](docs/specs/firmware.md). Para verificar desde la terminal: `./firmware/compilar.sh`. GitHub Actions también compila el firmware en cada push.
 
-Comandos y mensajes: [`docs/protocolo_serial.md`](docs/protocolo_serial.md). Conexiones: [`hardware/conexiones_esp32.md`](hardware/conexiones_esp32.md).
+**Panel web y puente.**
+
+```bash
+cd software/puente && npm install && npm run simular   # http://localhost:3000, sin hardware
+```
+
+Con el ESP32 conectado: [`software/puente/README.md`](software/puente/README.md).
+
+Comandos y mensajes: [`docs/specs/protocolo_serial.md`](docs/specs/protocolo_serial.md). Conexiones: [`hardware/conexiones_esp32.md`](hardware/conexiones_esp32.md).

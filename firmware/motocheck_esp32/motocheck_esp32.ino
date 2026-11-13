@@ -1,30 +1,17 @@
-// MotoCheck Lab — firmware ESP32 (Sprint 1)
+// MotoCheck Lab — firmware ESP32 v0.2
 // Línea de preinspección a escala: 4 estaciones sobre una banda.
 //   E1 Faro: LDR (servo 1 acerca la fotocelda)
 //   E2 Temperatura: DS18B20 (servo 2 apoya la sonda en el motor simulado)
 //   E3 Gases: MQ-2 (servo 3 acerca el sensor al escape)
 //   E4 Rueda: Hall (servo 4 acerca el rodillo con motor a la rueda trasera)
-// Comunicación: USB serial, una línea JSON por mensaje (ver docs/protocolo_serial.md).
+// Comunicación: USB serial, una línea JSON por mensaje (ver docs/specs/protocolo_serial.md).
 // Librerías: ESP32Servo, OneWire, DallasTemperature.
 
 #include <ESP32Servo.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// ---------- Pines (ver hardware/conexiones_esp32.md) ----------
-// Entradas
-const int PIN_LDR = 36;      // VP, ADC1. Divisor: LDR a 3V3, 10k a GND
-const int PIN_MQ2 = 39;      // VN, ADC1. AO del MQ-2 por divisor 10k/20k
-const int PIN_IR[4] = {34, 35, 32, 33};  // FC-51: LOW = moto detectada
-const int PIN_HALL = 27;     // A3144, pull-up 10k a 3V3
-const int PIN_DS18B20 = 4;   // OneWire, pull-up 4k7 a 3V3
-// Salidas
-const int PIN_SERVO[4] = {18, 19, 21, 22};
-const int PIN_MOTOR_BANDA = 25;    // L298N ENA (IN1=5V, IN2=GND)
-const int PIN_MOTOR_RODILLO = 26;  // L298N ENB (IN3=5V, IN4=GND)
-const int PIN_LED_VERDE[4] = {13, 16, 23, 5};
-const int PIN_LED_ROJO[4] = {14, 17, 2, 12};
-const int PIN_BUZZER = 15;
+#include "pines.h"
 
 // ---------- Parámetros (se cambian por serial con CFG;clave=valor) ----------
 struct Config {
@@ -101,11 +88,12 @@ void IRAM_ATTR isrHall() {
   unsigned long dt = ahora - ultimoPulsoUs;
   if (dt < 2000) return;  // antirrebote: >30 000 RPM no es físico
   if (ultimoPulsoUs != 0 && nPeriodos < MAX_PERIODOS) {
-    periodos[nPeriodos++] = dt;
+    periodos[nPeriodos] = dt;
+    nPeriodos = nPeriodos + 1;
   }
   ultimoPulsoUs = ahora;
   ultimoPulsoMs = millis();
-  pulsos++;
+  pulsos = pulsos + 1;
 }
 
 void cambiarEstado(Estado nuevo) {
@@ -323,13 +311,22 @@ void aplicarConfig(const String &par) {
   Serial.printf("{\"evt\":\"cfg\",\"ok\":true,\"clave\":\"%s\",\"valor\":%.2f}\n", k.c_str(), v);
 }
 
+void enviarConfig() {
+  Serial.printf("{\"evt\":\"config\",\"pwm_banda\":%d,\"pwm_rodillo\":%d,\"servo_reposo\":%d,\"servo_medida\":%d,"
+                "\"luz_min\":%.0f,\"temp_min\":%.1f,\"temp_max\":%.1f,\"gas_max\":%.2f,"
+                "\"rpm_min\":%.0f,\"rpm_max\":%.0f,\"cv_max\":%.1f,\"timeout\":%lu}\n",
+                cfg.pwmBanda, cfg.pwmRodillo, cfg.servoReposo, cfg.servoMedida,
+                cfg.luzMinMv, cfg.tempMinC, cfg.tempMaxC, cfg.gasMaxRel,
+                cfg.rpmMin, cfg.rpmMax, cfg.cvMaxPct, cfg.timeoutEstacionMs);
+}
+
 void enviarLecturas() {
   Serial.printf("{\"evt\":\"lecturas\",\"luz_mv\":%.0f,\"gas_mv\":%.0f,\"ir\":[%d,%d,%d,%d],\"pulsos\":%lu}\n",
                 leerMv(PIN_LDR), leerMv(PIN_MQ2),
                 motoEnEstacion(0), motoEnEstacion(1), motoEnEstacion(2), motoEnEstacion(3), pulsos);
 }
 
-// Comandos: START;PLACA · STOP · CFG;clave=valor · PING · LEER
+// Comandos: START;PLACA · STOP · CFG;clave=valor · CONFIG · PING · LEER
 void atenderSerial() {
   if (!Serial.available()) return;
   String linea = Serial.readStringUntil('\n');
@@ -350,6 +347,10 @@ void atenderSerial() {
     Serial.printf("{\"evt\":\"pong\",\"estado\":\"%s\"}\n", NOMBRE_ESTADO[estado]);
   } else if (linea == "LEER") {
     enviarLecturas();
+  } else if (linea == "CONFIG") {
+    enviarConfig();
+  } else if (linea.length() > 0) {
+    Serial.printf("{\"evt\":\"rechazado\",\"motivo\":\"comando desconocido\"}\n");
   }
 }
 
@@ -372,7 +373,8 @@ void setup() {
   ds18b20.setWaitForConversion(false);
   attachInterrupt(digitalPinToInterrupt(PIN_HALL), isrHall, FALLING);
   apagarTodo();
-  Serial.println("{\"evt\":\"hola\",\"equipo\":\"MotoCheck Lab\",\"version\":\"0.1\"}");
+  Serial.println("{\"evt\":\"hola\",\"equipo\":\"MotoCheck Lab\",\"version\":\"0.2\"}");
+  enviarConfig();
   cambiarEstado(CALENTANDO);
 }
 
