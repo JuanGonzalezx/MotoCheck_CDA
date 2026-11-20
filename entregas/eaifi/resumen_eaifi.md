@@ -1,146 +1,70 @@
-# Inscripción EAiFi 13.0 — texto listo para copiar y pegar
+# Resumen de trabajo — EAiFi 13.0
 
-## Antes de empezar
-
-- **Plazo:** la profe dijo **hasta el 20 de noviembre, sin excepciones**. El sitio muestra inscripción hasta el 24 y aceptación el 24. Hay que hacerlo **antes del 20**.
-- **El evento** es del **30 de noviembre al 4 de diciembre de 2026**, presencial, en la Facultad de Inteligencia Artificial e Ingenierías.
-- **Quién:** **un solo autor** (el corresponsal) crea la cuenta en https://eaifi.org → *Inscribir Ponencia*, con su **correo institucional**, e inscribe el trabajo con los datos de los dos.
-- **Datos de cada autor** que pide el formulario: nombres, apellidos, correo, número de documento, ciudad de expedición e institución. **No se guardan en este repositorio**, porque es público.
-- **Estado del proyecto:** está en curso, así que en Resultados va **"Resultados preliminares"**. Discusión y Conclusión no son obligatorias, pero abajo hay un texto corto por si el formulario las deja llenar.
-- **Límite de palabras:** el formulario lo muestra en pantalla. La **versión A** tiene 326 palabras (introducción 97, objetivo 51, metodología 109, resultados 69) y la **versión B (corta)** tiene 179. Las palabras clave y las referencias no se cuentan aquí.
-
----
+> Texto listo para copiar en https://eaifi.org (*Inscribir Ponencia*). La inscripción la hace **un solo autor**, con su correo institucional. Los números de documento se escriben **directamente en el formulario**: no se guardan en este repositorio porque es público.
 
 ## 1. Información general
 
-**Programa / actividad académica** (elegir en la lista la opción de 2026-2):
-```
-Automatización y Control de Procesos — Ingeniería de Sistemas y Computación
-```
+**Programa/Actividad académica:** (Ing. Sistemas y Computación) G8F0223 Automatización y Control de Procesos. *Elegir en la lista la opción que tenga el código de grupo de 2026-2.*
 
-**Título del trabajo:**
-```
-MotoCheck Lab: línea automatizada de preinspección de motocicletas a escala con banda transportadora, ESP32 y supervisión web en la nube
-```
+**Título:** MotoCheck Lab: línea automatizada de preinspección de motocicletas a escala con banda transportadora, ESP32 y supervisión web en la nube.
 
-**Institución de afiliación:**
-```
-Universidad de Caldas
-```
+**Institución de afiliación:** Universidad de Caldas.
 
----
+## 2. Contenido del resumen
 
-## 2. Resumen — versión A (326 palabras)
+**Introducción.** La inspección automatizada permite revisar el 100 % de las unidades de un proceso con criterios uniformes y registro trazable, por lo que es un pilar del control de calidad en la industria. En Colombia, la revisión técnico-mecánica de motocicletas solo la realizan Centros de Diagnóstico Automotor acreditados y reúne mediciones de naturaleza distinta (iluminación del faro, temperatura de operación, emisiones y estado de la rodadura) que dependen en buena parte de pasos manuales, lo que alarga los tiempos de atención y expone el proceso a errores de clasificación. Si bien existen soluciones de bajo costo para pruebas aisladas, integrarlas en una sola línea que transporte el vehículo, lo detenga en el punto exacto, acerque cada instrumento sin obstruir el paso y registre los resultados sigue siendo un desafío: un error de posicionamiento o de sincronización invalida la medida aunque el sensor funcione bien.
 
-**Introducción:**
-```
-En Colombia, la revisión técnico-mecánica de motocicletas solo la realizan Centros de Diagnóstico Automotor acreditados y reúne mediciones heterogéneas (faro, temperatura, gases y rodadura) que dependen en buena parte de pasos manuales. Esto alarga los tiempos de atención y expone el proceso a errores de clasificación. La inspección automatizada permite revisar el 100 % de las unidades con criterios uniformes y registro trazable, pero no se encontró un modelo a escala que integre transporte, varias pruebas secuenciales y almacenamiento en la nube para estudiarla de forma cuantitativa. ¿Es viable automatizar la preinspección con instrumentación de bajo costo?
-```
+Este trabajo aborda dicha problemática mediante un desarrollo incremental en tres fases: el diseño y la validación de la secuencia en simulación, la construcción de la línea física con cuatro estaciones de prueba y la integración de la supervisión web con almacenamiento en la nube. De este modo, la investigación busca responder a la siguiente pregunta: ¿es viable automatizar la preinspección de motocicletas a escala con instrumentación de bajo costo, de manera repetible y trazable? El alcance del estudio abarca desde el diseño de la arquitectura y la lógica de control hasta su validación en un gemelo digital y en una maqueta física, sin pretender sustituir la revisión oficial.
 
-**Objetivo:**
-```
-Desarrollar un prototipo a escala de una línea automatizada de preinspección de motocicletas que, mediante una banda transportadora, sensores de luz, temperatura, gases y velocidad, un controlador ESP32 y una aplicación web con almacenamiento en la nube, ejecute y registre pruebas indicativas, para evaluar su repetibilidad y su tiempo de ciclo.
-```
+**Objetivo.** Desarrollar y validar una línea automatizada a escala para la preinspección de motocicletas con registro de resultados en la nube.
 
-**Metodología:**
-```
-Investigación aplicada, de enfoque cuantitativo, con desarrollo iterativo por sprints. Una banda con motorreductor detiene una motocicleta a escala 1:12 en cuatro estaciones detectadas por sensores infrarrojos. En cada una, un servomotor acerca el instrumento: fotocelda (faro), DS18B20 (temperatura), MQ-2 (gases) y sensor Hall con rodillo motorizado (RPM de la rueda). Un ESP32 ejecuta una máquina de estados con umbrales y tiempos máximos; un puente en Node.js registra cada inspección en MongoDB Atlas y la muestra en un panel web tipo SCADA. La evaluación incluye calibración frente a instrumentos de referencia, repeticiones por prueba, clasificación de motocicletas con condición conocida (errores tipo I y II) y tiempo de ciclo.
-```
+**Metodología.** En la primera fase, el desafío fue definir una secuencia de inspección que coordinara transporte, posicionamiento y medición sin conflictos entre los mecanismos. Para resolverlo, se modeló la línea en un gemelo digital 3D y se diseñó una máquina de estados finitos (avance, despliegue, medición, retiro y liberación) con tiempos máximos por estación y retorno seguro ante fallas, que se depuró en un simulador del controlador antes de construir el hardware.
 
-**Resultados preliminares:**
-```
-Se validó la secuencia de las cuatro estaciones en un gemelo digital 3D y en un simulador del controlador. El firmware del ESP32 compila con versiones fijadas y verificación automática en cada cambio; el panel web y el registro en la nube funcionan, incluido el modo sin conexión con sincronización posterior. La maqueta física está en construcción y las mediciones del protocolo experimental se ejecutarán antes de la socialización.
-```
+Posteriormente, surgió el reto de medir sobre una motocicleta de juguete que no tiene motor, ni calor propio, ni tracción, sin que los sensores obstruyeran su paso. Para ello, se construyó una banda transportadora con motorreductor y cuatro estaciones detectadas por sensores infrarrojos, en las que un servomotor acerca el instrumento y lo retira antes de cada avance: una fotocelda dentro de una cámara oscura (faro), una sonda DS18B20 sobre un motor simulado (temperatura), un sensor MQ-2 con línea base en aire limpio (gases) y un rodillo motorizado que hace girar la rueda trasera mientras un sensor Hall cuenta sus vueltas (RPM y estabilidad). Un ESP32 ejecuta la lógica de control y evalúa cada prueba frente a umbrales configurables.
 
-**Palabras clave** (separadas por punto y coma):
-```
-automatización; inspección vehicular; banda transportadora; ESP32; sistemas SCADA
-```
+Finalmente, el obstáculo fue garantizar la trazabilidad de cada inspección y la operación aun sin conexión a internet. Esto se resolvió con un puente en Node.js que lee el puerto serial, guarda cada inspección en MongoDB Atlas, con respaldo local y sincronización posterior, y la publica en tiempo real en un panel web tipo SCADA. La evaluación sigue un protocolo de nueve pruebas: calibración de cada sensor frente a un instrumento de referencia, repetibilidad, exactitud de parada, tiempo de ciclo y clasificación de motocicletas preparadas con fallas conocidas, para cuantificar los errores tipo I (falsa alarma) y tipo II (falla no detectada).
 
----
+**Resultados.** *(Resultados preliminares)* Se desarrolló e integró la arquitectura completa del sistema en sus tres capas. En la capa de control, el firmware del ESP32 implementa la máquina de estados de las cuatro estaciones y un protocolo serial bidireccional en JSON, y compila sin errores con versiones fijadas, con verificación automática en cada cambio. En simulación, la línea completa un ciclo de inspección de cuatro estaciones en aproximadamente 35 s, según los tiempos programados, y responde de forma correcta ante fallas inducidas como el faro débil, la rueda frenada o el atasco de la banda, pasando a un estado de parada segura cuando la motocicleta no llega a una estación.
 
-## 2b. Resumen — versión B, corta (179 palabras)
+En la capa de supervisión, el panel web permite registrar la placa, iniciar la línea, seguir cada estación en tiempo real, consultar el historial, generar un reporte por vehículo y exportar los datos. Las pruebas automáticas del software verificaron el flujo completo de inspección, el rechazo de órdenes con la línea ocupada y la sincronización de los registros guardados sin conexión al recuperarse el acceso a la nube. La maqueta física se encuentra en construcción y las mediciones del protocolo experimental se presentarán en la socialización.
 
-Usarla si el límite de la pantalla es menor. Título, palabras clave y referencias quedan iguales.
+**Discusión.** El hallazgo más relevante del diseño es que, en una línea de inspección a escala, la dificultad principal no reside en la capacidad de cada sensor, sino en la coordinación entre el transporte, el posicionamiento y la medición: si el instrumento queda atravesado en la trayectoria, la motocicleta lo golpea, y si queda lejos del punto de interés, su lectura deja de ser representativa. Los brazos retráctiles y la detención por infrarrojo resuelven este conflicto, aunque añaden tiempo a cada estación. Por otro lado, los sensores de bajo costo exigen interpretar sus lecturas como indicativas: el MQ-2 responde a varios gases a la vez, por lo que se compara con su propia línea base, y la sonda de contacto DS18B20 responde lentamente, lo que alarga el ciclo. Finalmente, separar el control (ESP32) de la supervisión (puente y nube) permitió validar la lógica en simulación y mantener la operación sin internet, aunque el simulador no reemplaza las pruebas físicas.
 
-**Introducción:**
-```
-La revisión técnico-mecánica de motocicletas en Colombia reúne mediciones heterogéneas que dependen de pasos manuales, lo que alarga los tiempos de atención y genera errores de clasificación. No se encontró un modelo a escala que integre transporte, pruebas secuenciales y registro en la nube para estudiar su automatización.
-```
+**Conclusión.** El sistema integra transporte por banda, posicionamiento por infrarrojo, cuatro pruebas indicativas con brazos servoaccionados, control secuencial en un ESP32 y supervisión web con almacenamiento en la nube, y cumple los requisitos de un sistema automatizado con entradas, salidas, procesamiento, interfaz y base de datos. La validación en simulación indica que es viable automatizar la preinspección a escala con instrumentación de bajo costo, siempre que el diseño mecánico garantice paradas repetibles y que las lecturas se traten como indicativas. Como trabajo futuro quedan medir en la maqueta física la exactitud y los errores tipo I y II, reemplazar la sonda de contacto por un termómetro infrarrojo y modelar el efecto de esta etapa en los tiempos de atención de un CDA.
 
-**Objetivo:**
-```
-Desarrollar un prototipo a escala de línea automatizada de preinspección de motocicletas con banda transportadora, sensores, ESP32 y supervisión web en la nube, y evaluar su repetibilidad y tiempo de ciclo.
-```
+**Palabras clave.** automatización; inspección vehicular; banda transportadora; sistemas embebidos; supervisión SCADA
 
-**Metodología:**
-```
-Investigación aplicada cuantitativa. Una banda detiene una motocicleta 1:12 en cuatro estaciones: faro (fotocelda), temperatura (DS18B20), gases (MQ-2) y rueda (sensor Hall con rodillo). Un ESP32 ejecuta una máquina de estados con umbrales; un puente en Node.js guarda cada inspección en MongoDB Atlas y la muestra en un panel web. Se evalúan calibración, repetibilidad, errores tipo I y II y tiempo de ciclo.
-```
+**Referencias**
 
-**Resultados preliminares:**
-```
-La secuencia se validó en un gemelo digital y un simulador; el firmware, el panel web y el registro en la nube funcionan. La maqueta está en construcción y las mediciones se realizarán antes de la socialización.
-```
+González-Prida Díaz, V., Crespo Márquez, A., Marcos Alberca-Carriazo, J. A., & de la Fuente Carmona, A. (2027). Reliability modelling and requirement derivation for automated railway inspection systems under operational fallback. *Reliability Engineering & System Safety, 277*, 112989. https://doi.org/10.1016/j.ress.2026.112989
 
----
+Groover, M. P. (2015). *Automation, production systems, and computer-integrated manufacturing* (4th ed.). Pearson.
 
-## Si ya hay datos reales antes de inscribirse
+Ha, T. W., & Hong, S. J. (2020). A study on the inspection standards and methods of two-wheeled motorcycle headlight. *Journal of Auto-Vehicle Safety Association, 12*(3), 7–12. https://doi.org/10.22680/kasa2020.12.3.007
 
-Reemplazar **Resultados preliminares** por este texto, con los números de `analisis/resultados/resultados.md`:
+Kusalaphirom, T., Satiennam, T., Satiennam, W., & Seedam, A. (2022). Development of a real-world eco-driving cycle for motorcycles. *Sustainability, 14*(10), 6176. https://doi.org/10.3390/su14106176
 
-```
-En [N] inspecciones con motocicletas de condición conocida, la línea alcanzó una exactitud de [__] %, con error tipo I de [__] % y error tipo II de [__] %. El tiempo de ciclo fue de [__] ± [__] s ([__] motocicletas por hora) y el [__] % de los ciclos terminó sin error. La fotocelda presentó un R² de [__] frente al luxómetro y el sensor Hall un error medio de [__] % frente al tacómetro.
-```
+Melas, A., Franzetti, J., Buekenhoudt, P., Gavros, A., Checa, A., Suarez-Bertoa, R., & Giechaskiel, B. (2027). Identifying gross particle emitters: Insights from periodic technical inspections of diesel vehicles. *Transportation Research Part D: Transport and Environment, 162*, 105694. https://doi.org/10.1016/j.trd.2026.105694
 
-## Opcionales (si el formulario los deja llenar)
+Navarro-Alcendra, D.-C., Regino-Mancera, K., Zota-Rada, J., & Troncoso-Palacio, A. (2024). Análisis para reducir los tiempos de espera en un centro de diagnóstico automotor. *Boletín de Innovación, Logística y Operaciones, 6*(1), 26–34. https://doi.org/10.17981/bilo.6.1.2024.04
 
-**Discusión:**
-```
-La uniformidad del criterio automatizado y la trazabilidad en la nube son las principales contribuciones; las lecturas de sensores de bajo costo se interpretan como indicativas y no sustituyen la revisión oficial.
-```
+Ogata, K. (2010). *Ingeniería de control moderna* (5.ª ed.). Pearson Educación.
 
-**Conclusión:**
-```
-Una línea a escala con instrumentación de bajo costo permite estudiar de forma cuantitativa la automatización de la preinspección de motocicletas y sienta las bases para modelar su efecto en los tiempos de atención de un CDA.
-```
+Singh, S. A., Jiang, X., Hartley, T., VanMastrigt, B., Miller, B., Alsada, W., Luther, J., Bostic, M., & Farahani, S. (2026). Modernization framework for real-time monitoring of legacy belt conveyor systems. *The International Journal of Advanced Manufacturing Technology, 146*, 2231–2245. https://doi.org/10.1007/s00170-026-18919-4
 
----
+Szymlet, N., Rymaniak, Ł., & Lijewski, P. (2024). Two-wheeled urban vehicles—A review of emissions test regulations and literature. *Energies, 17*(3), 586. https://doi.org/10.3390/en17030586
 
-## 3. Referencias (APA 7, orden alfabético; el formulario pide entre 5 y 10)
+## 3. Autores del proyecto
 
-Pegar una por una o todas juntas, según lo permita el formulario:
-
-```
-González-Prida Díaz, V., Crespo Márquez, A., Marcos Alberca-Carriazo, J. A., & de la Fuente Carmona, A. (2027). Reliability modelling and requirement derivation for automated railway inspection systems under operational fallback. Reliability Engineering & System Safety, 277, 112989. https://doi.org/10.1016/j.ress.2026.112989
-
-Groover, M. P. (2015). Automation, production systems, and computer-integrated manufacturing (4th ed.). Pearson.
-
-Ha, T. W., & Hong, S. J. (2020). A study on the inspection standards and methods of two-wheeled motorcycle headlight. Journal of Auto-Vehicle Safety Association, 12(3), 7–12. https://doi.org/10.22680/kasa2020.12.3.007
-
-Kusalaphirom, T., Satiennam, T., Satiennam, W., & Seedam, A. (2022). Development of a real-world eco-driving cycle for motorcycles. Sustainability, 14(10), 6176. https://doi.org/10.3390/su14106176
-
-Melas, A., Franzetti, J., Buekenhoudt, P., Gavros, A., Checa, A., Suarez-Bertoa, R., & Giechaskiel, B. (2027). Identifying gross particle emitters: Insights from periodic technical inspections of diesel vehicles. Transportation Research Part D: Transport and Environment, 162, 105694. https://doi.org/10.1016/j.trd.2026.105694
-
-Navarro-Alcendra, D.-C., Regino-Mancera, K., Zota-Rada, J., & Troncoso-Palacio, A. (2024). Análisis para reducir los tiempos de espera en un centro de diagnóstico automotor. Boletín de Innovación, Logística y Operaciones, 6(1), 26–34. https://doi.org/10.17981/bilo.6.1.2024.04
-
-Singh, S. A., Jiang, X., Hartley, T., VanMastrigt, B., Miller, B., Alsada, W., Luther, J., Bostic, M., & Farahani, S. (2026). Modernization framework for real-time monitoring of legacy belt conveyor systems. The International Journal of Advanced Manufacturing Technology, 146, 2231–2245. https://doi.org/10.1007/s00170-026-18919-4
-
-Szymlet, N., Rymaniak, Ł., & Lijewski, P. (2024). Two-wheeled urban vehicles—A review of emissions test regulations and literature. Energies, 17(3), 586. https://doi.org/10.3390/en17030586
-```
-
----
-
-## 4. Autores (llenar en el formulario, no aquí)
-
-| Campo | Autor 1 | Autor 2 |
+| | Autor 1 | Autor 2 |
 |---|---|---|
 | Nombres | Juan Diego | Juan David |
 | Apellidos | Rendón Tabares | Ocampo González |
-| Correo | (institucional) | (institucional) |
-| Documento / ciudad de expedición | (en el formulario) | (en el formulario) |
-| Institución | Universidad de Caldas | Universidad de Caldas |
+| Correo electrónico | (institucional) | (institucional) |
+| N.º de documento | (en el formulario) | (en el formulario) |
+| Ciudad de expedición | (en el formulario) | (en el formulario) |
+| Afiliación | Universidad de Caldas | Universidad de Caldas |
 
-**Consentimiento:** marcar las dos casillas (tratamiento de datos según la Ley 1581 de 2012 y confirmación de que los datos de todos los autores están bien diligenciados).
+**Consentimiento:** marcar las dos casillas. **Después de enviar:** guardar una captura de la confirmación en esta carpeta.
 
-**Después de enviar:** tomar captura de la confirmación y guardarla en `entregas/eaifi/`.
+> **Si hay mediciones reales antes de enviar:** cambiar el último párrafo de Resultados por los números de `analisis/resultados/resultados.md` (exactitud, error tipo I y II, tiempo de ciclo) y quitar "(Resultados preliminares)".
